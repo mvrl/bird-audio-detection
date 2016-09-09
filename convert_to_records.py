@@ -3,6 +3,7 @@ from __future__ import division, print_function, absolute_import
 import os
 import itertools
 from multiprocessing import Pool
+import traceback
 
 import util
 
@@ -19,6 +20,7 @@ def dump(dat):
 
     if os.path.isfile(outfile):
         print('skipping ' + outfile)
+        return
 
     try:
         print(dat + ' processing excel')
@@ -26,12 +28,18 @@ def dump(dat):
         # merge label files
         book = xlrd.open_workbook(datadir + dat + '.xls')
         sh = book.sheet_by_index(0)
-        labels = np.asarray([tmp.value for tmp in sh.col_slice(0)])
+        labels1 = np.asarray([tmp.value for tmp in
+                sh.col_slice(0,start_rowx=0,end_rowx=21600)])
         book= xlrd.open_workbook(datadir + dat + '_2.xls')
         sh = book.sheet_by_index(0)
-        labels = np.concatenate((
-            labels,
-            np.asarray([tmp.value for tmp in sh.col_slice(0)])))
+        labels2 = np.asarray([tmp.value for tmp in
+                sh.col_slice(0,start_rowx=0,end_rowx=21600)])
+
+        labels = np.concatenate((labels1,labels2))
+
+        assert 21600 == labels1.size, dat + ' wrong number of labels (' + str(labels1.size) + ')'
+        assert 21600 == labels2.size, dat + ' wrong number of labels (' + str(labels2.size) + ')'
+        assert 43200 == labels.size, dat + ' wrong number of labels (' + str(labels.size) + ')'
 
         print(dat + ' processing edf')
         f = pyedflib.EdfReader(datadir + dat + '.edf')
@@ -48,11 +56,11 @@ def dump(dat):
             features[label] = buf
 
         print(dat + ' exporting to TFRecord format')
-        util.export_to_records(outfile, features,labels)
     except ValueError:
         traceback.print_exc()
-        print('removing ' + recorddir + dat + '.tfrecord')
-        os.remove(recorddir + dat + '.tfrecord')
+        return
+
+    util.export_to_records(outfile, features,labels)
 
 pool = Pool(processes=7)
 
