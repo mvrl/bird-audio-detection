@@ -18,11 +18,11 @@ with tf.variable_scope('Input'):
 
     label = tf.concat(0,(label1,label2))
 
-    print(label1.get_shape().as_list())
-    print(label2.get_shape().as_list())
-    print(label.get_shape().as_list())
-
-    weight = 40.*tf.gather(class_weights,label)
+    # weights to make sure infrequent classes have higher weight 
+    # TODO make a moving average of the weight 
+    _, idx, count = tf.unique_with_counts(label)
+    count = tf.cast(count,tf.float32)
+    weight = 3.*tf.gather(tf.reduce_mean(count) / (1. + count),idx)
 
 with tf.variable_scope('Predictor'):
     logits = network.network(features)
@@ -51,7 +51,6 @@ with tf.variable_scope('Train'):
     train_op = optimizer.minimize(loss,global_step=global_step)
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
-    y, idx, count = tf.unique_with_counts(label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(3,tf.int64),dtype=tf.int64)
 
 with tf.Session() as sess:
