@@ -6,22 +6,28 @@ def read_and_decode(dataset_file):
 
     reader = tf.TFRecordReader()
 
-    wack, serialized_example = reader.read(dataset_file)
+    _, serialized_example = reader.read(dataset_file)
 
     features = tf.parse_single_example(
         serialized_example,
         features={
-            'Piezo': tf.FixedLenFeature([800,],tf.float32),
-            'EEG1': tf.FixedLenFeature([800,],tf.float32),
-            'EEG2': tf.FixedLenFeature([800,],tf.float32),
-            'EMG': tf.FixedLenFeature([800,],tf.float32),
-            'label': tf.FixedLenFeature([1,], tf.int64),
+            'Piezo': tf.FixedLenFeature([1600,1,1],tf.float32),
+            'EEG1': tf.FixedLenFeature([1600,1,1],tf.float32),
+            'EEG2': tf.FixedLenFeature([1600,1,1],tf.float32),
+            'EMG': tf.FixedLenFeature([1600,1,1],tf.float32),
+            'label': tf.FixedLenFeature([1,2], tf.int64) # there were two annotaters
         })
 
-    piezo = features['Piezo']
-    label = features['label']
+    piezo = 2*(features['Piezo'] - 2.47)
+    eeg2 = features['EEG2']
 
-    return (wack, piezo, label) 
+    feature = eeg2
+    label1, label2 = tf.split(1,2,features['label'] - 1)
+
+    label1 = tf.reshape(label1,[-1])
+    label2 = tf.reshape(label2,[-1])
+
+    return (feature, label1, label2) 
 
 def records(dataset_file,datadir='./records/'):
 
@@ -31,6 +37,7 @@ def records(dataset_file,datadir='./records/'):
         qs.append(read_and_decode(fq))
 
     #return qs
-    return tf.train.shuffle_batch_join( qs, batch_size=64, capacity=1000000, min_after_dequeue=5000)
+    return tf.train.shuffle_batch_join( qs, batch_size=512,
+            capacity=1000000, min_after_dequeue=1000)
 
 

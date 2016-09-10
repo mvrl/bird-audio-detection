@@ -35,11 +35,8 @@ def dump(dat):
         labels2 = np.asarray([tmp.value for tmp in
                 sh.col_slice(0,start_rowx=0,end_rowx=21600)])
 
-        labels = np.concatenate((labels1,labels2))
-
         assert 21600 == labels1.size, dat + ' wrong number of labels (' + str(labels1.size) + ')'
         assert 21600 == labels2.size, dat + ' wrong number of labels (' + str(labels2.size) + ')'
-        assert 43200 == labels.size, dat + ' wrong number of labels (' + str(labels.size) + ')'
 
         print(dat + ' processing edf')
         f = pyedflib.EdfReader(datadir + dat + '.edf')
@@ -52,7 +49,7 @@ def dump(dat):
                 label = 'Piezo'
             
             buf = f.readSignal(channel)
-            buf = buf.reshape((labels.size,-1))
+            buf = buf.reshape((21600,-1))
             features[label] = buf
 
         print(dat + ' exporting to TFRecord format')
@@ -60,9 +57,9 @@ def dump(dat):
         traceback.print_exc()
         return
 
-    util.export_to_records(outfile, features,labels)
+    util.export_to_records(outfile,features,labels1,labels2)
 
-pool = Pool(processes=7)
+pool = Pool(processes=8)
 
 pool.map_async(
         dump,
