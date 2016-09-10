@@ -63,18 +63,19 @@ with tf.Session() as sess:
     sess.run(tf.initialize_all_variables())
 
     for ix in xrange(100000):
-        #print(sess.run([weight]))
-        _,_,_i,_loss,_acc,_count,_y,_conf = sess.run([
+        #print(sess.run((tf.reduce_mean(features),tf.reduce_mean(tf.square(features)))))
+        #continue
+        _,_,_i,_loss,_acc,_conf = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
             acc,
-            count,y,
             conf])
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
         if ix % 10 == 0:
             print(_conf)
+        
         #print(_y)
         #print(_count)
 

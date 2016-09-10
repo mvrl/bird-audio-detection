@@ -20,6 +20,7 @@ def network_arg_scope(weight_decay=0.00004,
   }
 
   lrelu = lambda x: tf.maximum(.1*x,x)
+  afn = lrelu
 
   # Set weight_decay for weights in Conv and FC layers.
   with slim.arg_scope([slim.conv2d],
@@ -28,7 +29,7 @@ def network_arg_scope(weight_decay=0.00004,
         [slim.conv2d],
         weights_initializer=slim.variance_scaling_initializer(),
         padding='VALID',
-        activation_fn=tf.nn.relu,
+        activation_fn=afn,
         normalizer_fn=slim.batch_norm,
         normalizer_params=batch_norm_params) as sc:
       return sc

@@ -19,9 +19,12 @@ def read_and_decode(dataset_file):
         })
 
     piezo = 2*(features['Piezo'] - 2.47)
-    eeg2 = features['EEG2']
+    eeg1 = features['EEG1'] / 30.
+    eeg2 = features['EEG2'] / 80.
+    emg = features['EMG'] / 30.
 
-    feature = eeg2
+    feature = tf.concat(2,(eeg1,eeg2,emg))
+
     label1, label2 = tf.split(1,2,features['label'] - 1)
 
     label1 = tf.reshape(label1,[-1])
