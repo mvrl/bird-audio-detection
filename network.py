@@ -39,23 +39,31 @@ def network(net):
 
    with slim.arg_scope(network_arg_scope()):
 
-       net = slim.conv2d(net,8,[3,1],stride=2)
        net = slim.conv2d(net,16,[3,1],stride=2)
        net = slim.conv2d(net,16,[3,1],stride=2)
+
        net = slim.conv2d(net,32,[3,1],stride=2)
        net = slim.conv2d(net,32,[3,1],stride=2)
+
        net = slim.conv2d(net,64,[3,1],stride=2)
-       net = slim.conv2d(net,16,[15,1],stride=2)
-       net = slim.conv2d(net,3,[3,1])
+       net = slim.conv2d(net,64,[3,1],stride=2)
+
+       #net = slim.conv2d(net,128,[3,1],stride=2)
+       #net = slim.conv2d(net,3,[3,1],normalizer_fn=None)
+       #net = slim.flatten(tf.reduce_mean(net,[1]))
+
+       net = slim.conv2d(net,128,[19,1],stride=6)
+       net = slim.conv2d(net,3,[1,1],normalizer_fn=None,activation_fn=None)
+
+       net = slim.flatten(net)
+
+       #print(net.get_shape().as_list())
+       #net = slim.flatten(tf.reduce_mean(net,[1]))
+
        #net = slim.conv2d(net,16,[7,1],stride=2)
        #net = slim.conv2d(net,32,[7,1],stride=2)
        #net = slim.conv2d(net,64,[7,1],stride=2)
        #net = slim.conv2d(net,3,[7,1],stride=2)
-       print(net.get_shape().as_list())
-       net = slim.flatten(tf.reduce_mean(net,[1]))
 
        return net 
-
-
-
 

@@ -46,7 +46,7 @@ with tf.variable_scope('Loss'):
 
 with tf.variable_scope('Train'):
     global_step = tf.Variable(0,name='global_step',trainable=False)
-    learning_rate = tf.train.exponential_decay(.1,global_step,10000,.5,staircase=True)
+    learning_rate = tf.train.exponential_decay(.1,global_step,1000,.5,staircase=True)
     optimizer = tf.train.AdamOptimizer(learning_rate,epsilon=.1)
     train_op = optimizer.minimize(loss,global_step=global_step)
 
