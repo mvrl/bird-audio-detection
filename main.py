@@ -39,8 +39,8 @@ with tf.variable_scope('Loss'):
 
     prediction = tf.argmax(logits,1)
 
-    loss_class = 10*tf.reduce_mean(weight*loss_class)
-    #loss_class = tf.reduce_mean(loss_class)
+    #loss_class = 10*tf.reduce_mean(weight*loss_class)
+    loss_class = tf.reduce_mean(loss_class)
 
     loss = loss_class + reg 
 
@@ -51,6 +51,7 @@ with tf.variable_scope('Train'):
     train_op = optimizer.minimize(loss,global_step=global_step)
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
+    acc_match = tf.contrib.metrics.accuracy(label1,label2)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(3,tf.int64),dtype=tf.int64)
 
 with tf.Session() as sess:
@@ -64,14 +65,16 @@ with tf.Session() as sess:
     for ix in xrange(100000):
         #print(sess.run((tf.reduce_mean(features),tf.reduce_mean(tf.square(features)))))
         #continue
-        _,_,_i,_loss,_acc,_conf = sess.run([
+        _,_,_i,_loss,_acc,_acc_match,_conf = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
             acc,
+            acc_match,
             conf])
-        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
+        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc) + ' : ' + str(_acc_match))
+
         if ix % 10 == 0:
             print(_conf)
         

@@ -40,7 +40,7 @@ def records(dataset_file,datadir='./records/'):
         qs.append(read_and_decode(fq))
 
     #return qs
-    return tf.train.shuffle_batch_join( qs, batch_size=512,
-            capacity=1000000, min_after_dequeue=1000)
+    return tf.train.shuffle_batch_join( qs, batch_size=256,
+            capacity=10000, min_after_dequeue=3000)
 
 
