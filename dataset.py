@@ -23,7 +23,8 @@ def read_and_decode(dataset_file):
     eeg2 = features['EEG2'] / 80.
     emg = features['EMG'] / 30.
 
-    feature = tf.concat(2,(eeg1,eeg2,emg))
+    #feature = tf.concat(2,(eeg1,eeg2,emg))
+    feature = piezo 
 
     label1, label2 = tf.split(1,2,features['label'] - 1)
 

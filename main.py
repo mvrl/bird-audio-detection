@@ -39,14 +39,14 @@ with tf.variable_scope('Loss'):
 
     prediction = tf.argmax(logits,1)
 
-    #loss_class = 10*tf.reduce_mean(weight*loss_class)
-    loss_class = tf.reduce_mean(loss_class)
+    loss_class = 10*tf.reduce_mean(weight*loss_class)
+    #loss_class = tf.reduce_mean(loss_class)
 
     loss = loss_class + reg 
 
 with tf.variable_scope('Train'):
     global_step = tf.Variable(0,name='global_step',trainable=False)
-    learning_rate = tf.train.exponential_decay(.1,global_step,1000,.5,staircase=True)
+    learning_rate = tf.train.exponential_decay(.1,global_step,10000,.5,staircase=True)
     optimizer = tf.train.AdamOptimizer(learning_rate,epsilon=.1)
     train_op = optimizer.minimize(loss,global_step=global_step)
 
@@ -62,7 +62,7 @@ with tf.Session() as sess:
     threads = tf.train.start_queue_runners(coord=coord)
     sess.run(tf.initialize_all_variables())
 
-    for ix in xrange(100000):
+    for ix in xrange(70000):
         #print(sess.run((tf.reduce_mean(features),tf.reduce_mean(tf.square(features)))))
         #continue
         _,_,_i,_loss,_acc,_acc_match,_conf = sess.run([
