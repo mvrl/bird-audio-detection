@@ -1,11 +1,14 @@
 import tensorflow as tf
 slim = tf.contrib.slim
 
-def network_arg_scope(weight_decay=0.00004,
-                           batch_norm_var_collection='moving_vars'):
+def network_arg_scope(
+        weight_decay=0.00004,
+        is_training=True,
+        batch_norm_var_collection='moving_vars'):
+
   batch_norm_params = {
       # Decay for the moving averages.
-      'decay': 0.9997,
+      'decay': 0.999,
       # epsilon to prevent 0s in variance.
       'epsilon': 0.001,
       # collection containing update_ops.
@@ -20,50 +23,91 @@ def network_arg_scope(weight_decay=0.00004,
   }
 
   lrelu = lambda x: tf.maximum(.1*x,x)
-  #afn = lrelu
-  afn = tf.nn.relu
+  afn = lrelu
+  #afn = tf.nn.relu
+  afn = tf.nn.elu
 
   # Set weight_decay for weights in Conv and FC layers.
   with slim.arg_scope([slim.conv2d],
-                      weights_regularizer=slim.l2_regularizer(weight_decay)):
-    with slim.arg_scope(
-        [slim.conv2d],
-        weights_initializer=slim.variance_scaling_initializer(),
-        padding='VALID',
-        activation_fn=afn,
-        normalizer_fn=slim.batch_norm,
-        normalizer_params=batch_norm_params) as sc:
-      return sc
+    weights_regularizer=slim.l2_regularizer(weight_decay),
+    weights_initializer=slim.variance_scaling_initializer(),
+    padding='VALID',
+    activation_fn=afn,
+    normalizer_fn=slim.batch_norm,
+    normalizer_params=batch_norm_params):
+      with slim.arg_scope([slim.max_pool2d], stride=(2,1)):
+        with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
+            return sc
 
-def network(net):
+def network_v0(net, is_training=True, use_eeg=True):
+    with slim.arg_scope(network_arg_scope(is_training=is_training)):
 
-   with slim.arg_scope(network_arg_scope()):
+        if use_eeg:
+            net = slim.conv2d(net,16,[5,1],rate=5)
+            net = slim.max_pool2d(net,[2,1])
+            net = slim.conv2d(net,32,[5,1],rate=2)
+            net = slim.max_pool2d(net,[2,1])
+        else:
+            net = slim.conv2d(net,16,[5,1],rate=5)
+            net = slim.max_pool2d(net,[2,1])
+            net = slim.conv2d(net,32,[5,1],rate=2)
+            net = slim.max_pool2d(net,[2,1])
 
-       net = slim.conv2d(net,16,[3,1],stride=2)
-       net = slim.conv2d(net,16,[3,1],stride=2)
+        net = slim.conv2d(net,64,[3,3])
 
-       net = slim.conv2d(net,32,[3,1],stride=2)
-       net = slim.conv2d(net,32,[3,1],stride=2)
+        net = slim.conv2d(net,64,[5,1],rate=2)
+        net = slim.max_pool2d(net,[2,1])
 
-       net = slim.conv2d(net,64,[3,1],stride=2)
-       net = slim.conv2d(net,64,[3,1],stride=2)
+        net = slim.conv2d(net,128,[5,1],rate=2)
+        net = slim.max_pool2d(net,[2,1])
 
-       #net = slim.conv2d(net,128,[3,1],stride=2)
-       #net = slim.conv2d(net,3,[3,1],normalizer_fn=None)
-       #net = slim.flatten(tf.reduce_mean(net,[1]))
+        net = slim.conv2d(net,128,[5,1],rate=2)
+        net = slim.max_pool2d(net,[2,1])
 
-       net = slim.conv2d(net,128,[19,1],stride=6)
-       net = slim.conv2d(net,3,[1,1],normalizer_fn=None,activation_fn=None)
+        net = slim.conv2d(net,256,[5,1],rate=2)
+        net = slim.max_pool2d(net,[2,1])
 
-       net = slim.flatten(net)
+        net = slim.conv2d(net,3,[15,1],normalizer_fn=None,activation_fn=None)
 
-       #print(net.get_shape().as_list())
-       #net = slim.flatten(tf.reduce_mean(net,[1]))
+        net = slim.flatten(net)
 
-       #net = slim.conv2d(net,16,[7,1],stride=2)
-       #net = slim.conv2d(net,32,[7,1],stride=2)
-       #net = slim.conv2d(net,64,[7,1],stride=2)
-       #net = slim.conv2d(net,3,[7,1],stride=2)
+        #print(net.get_shape().as_list())
+        #net = slim.flatten(tf.reduce_mean(net,[1]))
 
-       return net 
+        #net = slim.conv2d(net,16,[7,1],stride=2)
+        #net = slim.conv2d(net,32,[7,1],stride=2)
+        #net = slim.conv2d(net,64,[7,1],stride=2)
+        #net = slim.conv2d(net,3,[7,1],stride=2)
+
+        return net 
+
+def network(net, is_training=True, use_eeg=True):
+    with slim.arg_scope(network_arg_scope(is_training=is_training)):
+
+        if use_eeg:
+            net = slim.conv2d(net,16,[5,1],stride=(2,1))
+            net = slim.conv2d(net,32,[5,1],stride=(2,1))
+            net = slim.conv2d(net,64,[3,3],stride=(2,1))
+        else:
+            net = slim.conv2d(net,16,[5,1],rate=5)
+            net = slim.max_pool2d(net,[2,1])
+            net = slim.conv2d(net,32,[5,1],rate=2)
+            net = slim.max_pool2d(net,[2,1])
+
+        net = slim.max_pool2d(net,[11,1],stride=(4,1)) 
+        net = slim.conv2d(net,64,[5,1],stride=2)
+        net = slim.conv2d(net,128,[5,1],stride=2)
+        print(net.get_shape().as_list())
+        net = slim.conv2d(net,3,[8,1],normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(tf.reduce_mean(net,[1]))
+
+        #print(net.get_shape().as_list())
+
+        #net = slim.conv2d(net,16,[7,1],stride=2)
+        #net = slim.conv2d(net,32,[7,1],stride=2)
+        #net = slim.conv2d(net,64,[7,1],stride=2)
+        #net = slim.conv2d(net,3,[7,1],stride=2)
+
+        return net 
 

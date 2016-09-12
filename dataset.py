@@ -1,8 +1,9 @@
 from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
+import numpy as np
 
-def read_and_decode(dataset_file):
+def read_and_decode(dataset_file,use_eeg=True,is_training=True):
 
     reader = tf.TFRecordReader()
 
@@ -23,8 +24,18 @@ def read_and_decode(dataset_file):
     eeg2 = features['EEG2'] / 80.
     emg = features['EMG'] / 30.
 
-    #feature = tf.concat(2,(eeg1,eeg2,emg))
-    feature = piezo 
+    if use_eeg: 
+        feature = tf.concat(1,(eeg1,eeg2,emg))
+    else:
+        feature = piezo 
+
+    if is_training:
+        # dataset augmentation
+        offset = np.random.randint(0,100)
+    else:
+        offset = 99
+
+    feature = feature[offset:(offset+1500),:]
 
     label1, label2 = tf.split(1,2,features['label'] - 1)
 
@@ -33,15 +44,22 @@ def read_and_decode(dataset_file):
 
     return (feature, label1, label2) 
 
-def records(dataset_file,datadir='./records/'):
+def records(dataset_file,datadir='./records/',use_eeg=True,is_training=True):
 
     qs = []
     for d in [tmp.strip() for tmp in open(dataset_file, 'r')]:
-        fq = tf.train.string_input_producer([datadir + d + '.tfrecord'])
-        qs.append(read_and_decode(fq))
 
-    #return qs
-    return tf.train.shuffle_batch_join( qs, batch_size=256,
-            capacity=10000, min_after_dequeue=3000)
+        fq = tf.train.string_input_producer([datadir + d + '.tfrecord'])
+        #if is_training:
+        #else:
+        #    fq = tf.train.string_input_producer([datadir + d + '.tfrecord'], num_epochs=1)
+
+        qs.append(read_and_decode(fq,use_eeg=use_eeg,is_training=is_training))
+
+    if is_training:
+        return tf.train.shuffle_batch_join( qs, batch_size=256,
+                capacity=10000, min_after_dequeue=5000)
+    else:
+        return tf.train.batch_join(qs, batch_size=512)
 
 
