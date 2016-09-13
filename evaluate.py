@@ -1,3 +1,6 @@
+# TODO include dataset name and record number in the output file so we
+# can compare across datasets
+
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -14,7 +17,7 @@ slim = tf.contrib.slim
 
 print('Setting up run')
 
-use_eeg = True
+use_eeg = True 
 
 run_name = 'elu'
 if use_eeg:
@@ -37,6 +40,8 @@ with tf.variable_scope('Input'):
             use_eeg=use_eeg,
             is_training=False)
 
+    label_output = tf.concat(1,(label1,label2))
+
     # why is this necessary?
     label1 = tf.reshape(label1,[-1])
     label2 = tf.reshape(label2,[-1])
@@ -48,6 +53,8 @@ with tf.variable_scope('Predictor'):
 
     logits = network.network(features, use_eeg=use_eeg,
             is_training=False)
+
+    probs = tf.nn.softmax(logits)
 
     # replicate because we have two annotaters
     logits = tf.concat(0,(logits,logits))
@@ -73,15 +80,21 @@ with tf.Session() as sess:
 
     print('Starting evaluation')
     _conf_accum = np.zeros((3,3), dtype=np.int64)
-    for ix in xrange(10000):
+    with open(FLAGS.checkpoint_dir + '/output.csv','w') as output:
 
-        _conf,_acc = sess.run([conf,acc])
+        for ix in xrange(10000):
 
-        print('Accuracy = {}'.format(_acc))
-        _conf_accum += _conf
+            _conf,_acc,_prob,_label_output = sess.run([conf,acc,probs,label_output])
 
-        if ix % 10 == 0:
-            print(_conf_accum)# / np.sum(_conf_accum))
+            np.savetxt(output,
+                    np.concatenate((_prob,_label_output+1),axis=1),
+                    fmt='%1.8f %1.8f %1.8f %u %u') 
+
+            print('Accuracy = {}'.format(_acc))
+            _conf_accum += _conf
+
+            if ix % 10 == 0:
+                print(_conf_accum)# / np.sum(_conf_accum))
 
     coord.request_stop()
     coord.join(threads)

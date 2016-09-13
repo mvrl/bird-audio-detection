@@ -16,7 +16,7 @@ slim = tf.contrib.slim
 
 print('Setting up run')
 
-use_eeg = True
+use_eeg = False 
 
 run_name = 'elu'
 if use_eeg:

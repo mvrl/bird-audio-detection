@@ -84,15 +84,13 @@ def network_v0(net, is_training=True, use_eeg=True):
 def network(net, is_training=True, use_eeg=True):
     with slim.arg_scope(network_arg_scope(is_training=is_training)):
 
+        net = slim.conv2d(net,16,[5,1],stride=(2,1))
+        net = slim.conv2d(net,32,[5,1],stride=(2,1))
+
         if use_eeg:
-            net = slim.conv2d(net,16,[5,1],stride=(2,1))
-            net = slim.conv2d(net,32,[5,1],stride=(2,1))
             net = slim.conv2d(net,64,[3,3],stride=(2,1))
         else:
-            net = slim.conv2d(net,16,[5,1],rate=5)
-            net = slim.max_pool2d(net,[2,1])
-            net = slim.conv2d(net,32,[5,1],rate=2)
-            net = slim.max_pool2d(net,[2,1])
+            net = slim.conv2d(net,64,[3,1],stride=(2,1))
 
         net = slim.max_pool2d(net,[11,1],stride=(4,1)) 
         net = slim.conv2d(net,64,[5,1],stride=2)

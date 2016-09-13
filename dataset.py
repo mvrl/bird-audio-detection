@@ -50,14 +50,10 @@ def records(dataset_file,datadir='./records/',use_eeg=True,is_training=True):
     for d in [tmp.strip() for tmp in open(dataset_file, 'r')]:
 
         fq = tf.train.string_input_producer([datadir + d + '.tfrecord'])
-        #if is_training:
-        #else:
-        #    fq = tf.train.string_input_producer([datadir + d + '.tfrecord'], num_epochs=1)
-
         qs.append(read_and_decode(fq,use_eeg=use_eeg,is_training=is_training))
 
     if is_training:
-        return tf.train.shuffle_batch_join( qs, batch_size=256,
+        return tf.train.shuffle_batch_join(qs, batch_size=256,
                 capacity=10000, min_after_dequeue=5000)
     else:
         return tf.train.batch_join(qs, batch_size=512)
