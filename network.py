@@ -1,3 +1,5 @@
+# MAYBE explicitly name layers
+
 import tensorflow as tf
 slim = tf.contrib.slim
 
