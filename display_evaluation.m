@@ -1,18 +1,19 @@
 addpath ~/matlab_root/
 
 %% load data
-runs = {'elu_eeg', 'elu_piezo'};
+runs = {'elu_eeg', 'lrelu_piezo', 'lrelu_eeg'};
 names = {'WAKE','NREM','REM'};
 
 eval = cell(numel(runs),numel(names));
 
 for irun = 1:numel(runs)
   
-  disp('loading data')
   run = runs{irun};
+  log = @(s) fprintf('%s: %s\n',run,s);
+
   
   % WARNING: only using a subset of the testing data
-  
+  log('loading data')
   data = dlmread(['checkpoint/' run '/output.csv'],' ',[0,0,200000,4]);
   
   good = data(:,end-1) == data(:,end);
@@ -24,7 +25,7 @@ for irun = 1:numel(runs)
   
   for iname = 1:numel(names)
     
-    disp('computing perfcurve')
+    log('computing perfcurve')
     [tmp.X,tmp.Y,tmp.T,tmp.AUC] = perfcurve(labels,scores(:,iname),iname);
     
     eval{irun,iname} = tmp;

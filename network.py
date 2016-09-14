@@ -6,7 +6,8 @@ slim = tf.contrib.slim
 def network_arg_scope(
         weight_decay=0.00004,
         is_training=True,
-        batch_norm_var_collection='moving_vars'):
+        batch_norm_var_collection='moving_vars',
+        activation_fn=tf.nn.relu):
 
     batch_norm_params = {
         # Decay for the moving averages.
@@ -24,10 +25,10 @@ def network_arg_scope(
         }
     }
 
-    lrelu = lambda x: tf.maximum(.1*x,x)
-    afn = lrelu
-    #afn = tf.nn.relu
-    #afn = tf.nn.elu
+    # for activation functions that are not "mostly linear" we should
+    # have a scale parameter
+    if activation_fn.func_name in ['elu']: 
+        batch_norm_params['scale'] = True
 
     # Set weight_decay for weights in Conv and FC layers.
     with slim.arg_scope([slim.conv2d],
@@ -35,7 +36,7 @@ def network_arg_scope(
         weights_initializer=slim.variance_scaling_initializer(),
         padding='VALID',
         outputs_collections=tf.GraphKeys.ACTIVATIONS,
-        activation_fn=afn,
+        activation_fn=activation_fn,
         normalizer_fn=slim.batch_norm,
         normalizer_params=batch_norm_params):
         with slim.arg_scope([slim.max_pool2d], 
@@ -44,8 +45,10 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, use_eeg=True):
-    with slim.arg_scope(network_arg_scope(is_training=is_training)):
+def network(net, is_training=True, use_eeg=True, activation_fn=tf.nn.relu):
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
 
         net = slim.conv2d(net,16,[5,1],stride=(2,1))
         net = slim.conv2d(net,32,[5,1],stride=(2,1))

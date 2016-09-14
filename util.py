@@ -1,6 +1,7 @@
 from __future__ import division, print_function, absolute_import
 
 import os
+from optparse import OptionParser
 import tensorflow as tf
 
 def _f(value):
@@ -30,4 +31,38 @@ def export_to_records(filename, features, labels1, labels2):
 
     writer.close()
 
+
+def parse_arguments():
+
+    parser = OptionParser()
+
+    parser.add_option("-a", "--activation", dest="AFN",default='relu')
+    parser.add_option("-f", "--feature", dest="FEAT",default='eeg')
+
+    (opts, args) = parser.parse_args()
+
+    nc = {}
+    nc['activation_fn'] = {
+        'elu':tf.nn.elu,
+        'relu':tf.nn.relu
+        }[opts.AFN]
+
+    nc['use_eeg'] = {
+        'eeg':True,
+        'piezo':False
+        }[opts.FEAT]
+
+    return nc
+
+def run_name(nc):
+
+    # define run name
+    run_name = nc['activation_fn'].func_name
+
+    if nc['use_eeg']:
+        run_name += '_eeg'
+    else:
+        run_name += '_piezo'
+
+    return run_name
 

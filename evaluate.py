@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 import dataset
 import network
-
+import util
 slim = tf.contrib.slim
 
 #
@@ -16,14 +16,10 @@ slim = tf.contrib.slim
 #
 
 print('Setting up run')
+nc = util.parse_arguments()
+run_name = util.run_name(nc)
 
-use_eeg = True 
-
-run_name = 'elu'
-if use_eeg:
-    run_name += '_eeg'
-else:
-    run_name += '_piezo'
+use_eeg = False 
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -37,7 +33,7 @@ with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
     features, label1, label2 = dataset.records('test.txt',
-            use_eeg=use_eeg,
+            use_eeg=nc['use_eeg'],
             is_training=False)
 
     label_output = tf.concat(1,(label1,label2))
@@ -51,8 +47,10 @@ with tf.variable_scope('Input'):
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(features, use_eeg=use_eeg,
-            is_training=False)
+    logits = network.network(features,
+            is_training=False,
+            use_eeg=nc['use_eeg'],
+            activation_fn=nc['activation_fn'])
 
     probs = tf.nn.softmax(logits)
 

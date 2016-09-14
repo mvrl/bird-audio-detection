@@ -4,25 +4,16 @@
 from __future__ import division, print_function, absolute_import
 
 import os
+
 import tensorflow as tf
 import dataset
 import network
-
+import util
 slim = tf.contrib.slim
 
-#
-#
-#
-
 print('Setting up run')
-
-use_eeg = False 
-
-run_name = 'elu'
-if use_eeg:
-    run_name += '_eeg'
-else:
-    run_name += '_piezo'
+nc = util.parse_arguments()
+run_name = util.run_name(nc)
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -47,7 +38,7 @@ with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
     features, label1, label2 = dataset.records('train.txt',
-            use_eeg=use_eeg,
+            use_eeg=nc['use_eeg'],
             is_training=True)
 
     # why is this necessary?
@@ -65,7 +56,10 @@ with tf.variable_scope('Input'):
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(features, use_eeg=use_eeg, is_training=True)
+    logits = network.network(features,
+            is_training=True,
+            use_eeg=nc['use_eeg'],
+            activation_fn=nc['activation_fn'])
 
     # replicate because we have two annotaters
     logits = tf.concat(0,(logits,logits))
@@ -123,14 +117,12 @@ with tf.Session() as sess:
             loss,
             acc,
             acc_match,
-            conf])
+            conf
+            ])
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc) + ' : ' + str(_acc_match))
 
         if ix % 10 == 0:
             print(_conf)
-        
-        #print(_y)
-        #print(_count)
 
 	if _i % 1000 == 0:
 	    print("saving total checkpoint")
