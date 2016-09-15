@@ -6,22 +6,27 @@ import os
 from optparse import OptionParser
 import tensorflow as tf
 
-def _f(value):
-    return tf.train.Feature(float_list=tf.train.FloatList(value=value.tolist()))
-def _l(value):
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=value))
+ttf = tf.train.Feature
+_b = lambda v: ttf(bytes_list=tf.train.BytesList(value=v))
+_f = lambda v: ttf(float_list=tf.train.FloatList(value=v.tolist()))
+_l = lambda v: ttf(int64_list=tf.train.Int64List(value=v))
 
-def export_to_records(filename, features, labels1, labels2):
+def export_to_records(filename, dat, features, labels1, labels2):
 
-    writer = tf.python_io.TFRecordWriter(filename)
+    writer = tf.python_io.TFRecordWriter(filename,
+            options=tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.ZLIB))
 
     for index in range(labels1.size):
 
         if labels1[index] not in [1,2,3] or labels2[index] not in [1,2,3]:
             continue
 
-        feature={'label': _l([int(labels1[index]),
-            int(labels2[index])])}
+        feature={
+                'file': _b([dat]),
+                'row':_l([index]),
+                'label': _l([int(labels1[index]), int(labels2[index])])
+            }
+
         for (key,value) in features.items(): 
             feature[key] = _f(value[index,:])
 

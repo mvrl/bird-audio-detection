@@ -5,7 +5,9 @@ import numpy as np
 
 def read_and_decode(dataset_file,use_eeg=True,is_training=True):
 
-    reader = tf.TFRecordReader()
+    reader = tf.TFRecordReader(
+            options=tf.python_io.TFRecordOptions(
+                tf.python_io.TFRecordCompressionType.ZLIB))
 
     _, serialized_example = reader.read(dataset_file)
 
@@ -16,7 +18,9 @@ def read_and_decode(dataset_file,use_eeg=True,is_training=True):
             'EEG1': tf.FixedLenFeature([1600,1,1],tf.float32),
             'EEG2': tf.FixedLenFeature([1600,1,1],tf.float32),
             'EMG': tf.FixedLenFeature([1600,1,1],tf.float32),
-            'label': tf.FixedLenFeature([1,2], tf.int64) # there were two annotaters
+            'label': tf.FixedLenFeature([1,2], tf.int64), # there were two annotaters
+            'file': tf.FixedLenFeature([],tf.string),
+            'row': tf.FixedLenFeature([1], tf.int64)
         })
 
     piezo = 2*(features['Piezo'] - 2.47)
@@ -39,10 +43,11 @@ def read_and_decode(dataset_file,use_eeg=True,is_training=True):
 
     label1, label2 = tf.split(1,2,features['label'] - 1)
 
+
     label1 = tf.reshape(label1,[-1])
     label2 = tf.reshape(label2,[-1])
 
-    return (feature, label1, label2) 
+    return feature,label1,label2,features['row'],features['file']
 
 def records(dataset_file,datadir='./records/',use_eeg=True,is_training=True):
 

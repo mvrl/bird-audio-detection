@@ -1,7 +1,7 @@
 addpath ~/matlab_root/
 
 %% load data
-runs = {'elu_eeg', 'lrelu_piezo', 'lrelu_eeg'};
+runs = {'elu_piezo', 'elu_eeg', 'relu_piezo', 'relu_eeg', 'elu_piezo_2', 'elu_eeg_2', 'relu_piezo_2', 'relu_eeg_2'};
 names = {'WAKE','NREM','REM'};
 
 eval = cell(numel(runs),numel(names));
@@ -14,10 +14,12 @@ for irun = 1:numel(runs)
   
   % WARNING: only using a subset of the testing data
   log('loading data')
-  data = dlmread(['checkpoint/' run '/output.csv'],' ',[0,0,200000,4]);
+  data = dlmread(['checkpoint/' run '/output.csv'],' ',[0,0,200000,7]);
   
   good = data(:,end-1) == data(:,end);
-  scores = data(good,1:end-2);
+  fileids = data(good,1)
+  rows = data(good,2)
+  scores = data(good,3:end-2);
   labels = data(good,end);
   
   %% make 1-vs-all ROC curves

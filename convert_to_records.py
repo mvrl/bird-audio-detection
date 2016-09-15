@@ -57,7 +57,7 @@ def dump(dat):
         traceback.print_exc()
         return
 
-    util.export_to_records(outfile,features,labels1,labels2)
+    util.export_to_records(outfile,dat,features,labels1,labels2)
 
 pool = Pool(processes=8)
 

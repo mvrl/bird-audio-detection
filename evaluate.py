@@ -32,7 +32,7 @@ flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output dir
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    features, label1, label2 = dataset.records('test.txt',
+    features, label1, label2, data_row, fileid = dataset.records('test.txt',
             use_eeg=nc['use_eeg'],
             is_training=False)
 
@@ -62,7 +62,7 @@ with tf.variable_scope('Predictor'):
     acc = tf.contrib.metrics.accuracy(prediction,label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(3,tf.int64),dtype=tf.int64)
 
-with tf.Session() as sess:
+with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
@@ -82,11 +82,14 @@ with tf.Session() as sess:
 
         for ix in xrange(10000):
 
-            _conf,_acc,_prob,_label_output = sess.run([conf,acc,probs,label_output])
+            _conf,_acc,_prob,_label_output,_data_row,_fileid = \
+               sess.run([conf,acc,probs,label_output,data_row,fileid])
+
+            _fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
 
             np.savetxt(output,
-                    np.concatenate((_prob,_label_output+1),axis=1),
-                    fmt='%1.8f %1.8f %1.8f %u %u') 
+                    np.concatenate((_fileid,_data_row,_prob,_label_output+1),axis=1),
+                    fmt='%u %u %1.8f %1.8f %1.8f %u %u') 
 
             print('Accuracy = {}'.format(_acc))
             _conf_accum += _conf

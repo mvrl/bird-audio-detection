@@ -37,7 +37,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    features, label1, label2 = dataset.records('train.txt',
+    features, label1, label2, _, _ = dataset.records('train.txt',
             use_eeg=nc['use_eeg'],
             is_training=True)
 
