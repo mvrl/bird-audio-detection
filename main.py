@@ -106,8 +106,10 @@ with tf.Session() as sess:
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
 
+    _i = sess.run(global_step)
+
     print('Starting training')
-    for ix in xrange(10000):
+    while _i < 10000:
         #print(sess.run((tf.reduce_mean(features),tf.reduce_mean(tf.square(features)))))
         #continue
         _,_,_i,_loss,_acc,_acc_match,_conf = sess.run([
@@ -121,7 +123,7 @@ with tf.Session() as sess:
             ])
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc) + ' : ' + str(_acc_match))
 
-        if ix % 10 == 0:
+        if _i % 10 == 0:
             print(_conf)
 
 	if _i % 1000 == 0:
