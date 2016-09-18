@@ -57,9 +57,10 @@ with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
     logits = network.network(features,
-            is_training=True,
-            use_eeg=nc['use_eeg'],
-            activation_fn=nc['activation_fn'])
+            is_training=True,**nc)
+            #use_eeg=nc['use_eeg'],
+            #activation_fn=nc['activation_fn'],
+            #capacity=nc['capacity'])
 
     # replicate because we have two annotaters
     logits = tf.concat(0,(logits,logits))

@@ -43,8 +43,9 @@ def parse_arguments():
 
     parser = OptionParser()
 
-    parser.add_option("-a", "--activation", dest="AFN",default='relu')
-    parser.add_option("-f", "--feature", dest="FEAT",default='eeg')
+    parser.add_option("-a", "--activation", dest="AFN", default='relu')
+    parser.add_option("-f", "--feature", dest="FEAT", default='eeg')
+    parser.add_option("-c", "--capacity", dest="CAP", type="float", default=1.0)
 
     (opts, args) = parser.parse_args()
 
@@ -59,6 +60,8 @@ def parse_arguments():
         'piezo':False
         }[opts.FEAT]
 
+    nc['capacity'] = opts.CAP
+
     return nc
 
 def run_name(nc):
@@ -70,6 +73,8 @@ def run_name(nc):
         run_name += '_eeg'
     else:
         run_name += '_piezo'
+
+    run_name += '_{:0.2f}'.format(nc['capacity'])
 
     return run_name
 

@@ -2,6 +2,7 @@
 
 import tensorflow as tf
 slim = tf.contrib.slim
+import numpy as np
 
 def network_arg_scope(
         weight_decay=0.00004,
@@ -45,22 +46,22 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, use_eeg=True, activation_fn=tf.nn.relu):
+def network(net, is_training=True, use_eeg=True, activation_fn=tf.nn.relu, capacity=1.0):
 
     with slim.arg_scope(network_arg_scope(is_training=is_training,
         activation_fn=activation_fn)):
 
-        net = slim.conv2d(net,16,[5,1],stride=(2,1))
-        net = slim.conv2d(net,32,[5,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*16),[5,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*32),[5,1],stride=(2,1))
 
         if use_eeg:
-            net = slim.conv2d(net,64,[3,3],stride=(2,1))
+            net = slim.conv2d(net,np.rint(capacity*64),[3,3],stride=(2,1))
         else:
-            net = slim.conv2d(net,64,[3,1],stride=(2,1))
+            net = slim.conv2d(net,np.rint(capacity*64),[3,1],stride=(2,1))
 
         net = slim.max_pool2d(net,[11,1],stride=(4,1)) 
-        net = slim.conv2d(net,64,[5,1],stride=2)
-        net = slim.conv2d(net,128,[5,1],stride=2)
+        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=2)
+        net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=2)
         print(net.get_shape().as_list())
         net = slim.conv2d(net,3,[8,1],normalizer_fn=None,activation_fn=None)
 

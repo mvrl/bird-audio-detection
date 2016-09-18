@@ -4,6 +4,7 @@
 from __future__ import division, print_function, absolute_import
 
 import os
+import sys
 import tensorflow as tf
 import numpy as np
 import dataset
@@ -15,15 +16,18 @@ slim = tf.contrib.slim
 #
 #
 
-print('Setting up run')
 nc = util.parse_arguments()
 run_name = util.run_name(nc)
-
-use_eeg = False 
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
+
+out_file = FLAGS.checkpoint_dir + 'output.csv'
+
+if os.path.isfile(out_file):
+    print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
+    sys.exit(0) 
 
 #
 # Define graph 
@@ -47,10 +51,7 @@ with tf.variable_scope('Input'):
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(features,
-            is_training=False,
-            use_eeg=nc['use_eeg'],
-            activation_fn=nc['activation_fn'])
+    logits = network.network(features,is_training=False,**nc)
 
     probs = tf.nn.softmax(logits)
 
@@ -78,7 +79,8 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     print('Starting evaluation')
     _conf_accum = np.zeros((3,3), dtype=np.int64)
-    with open(FLAGS.checkpoint_dir + '/output.csv','w') as output:
+
+    with open(out_file,'w') as output:
 
         for ix in xrange(10000):
 
