@@ -1,7 +1,8 @@
 addpath ~/matlab_root/
 
 %% load data
-runs = {'elu_piezo', 'elu_eeg', 'relu_piezo', 'relu_eeg', 'elu_piezo_2', 'elu_eeg_2', 'relu_piezo_2', 'relu_eeg_2'};
+%runs = {'elu_piezo', 'elu_eeg', 'relu_piezo', 'relu_eeg', 'elu_piezo_2', 'elu_eeg_2', 'relu_piezo_2', 'relu_eeg_2'};
+runs = dir('checkpoint'); runs = {runs(3:end).name};
 names = {'WAKE','NREM','REM'};
 
 % results across all datasets
