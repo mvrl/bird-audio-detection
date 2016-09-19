@@ -5,6 +5,7 @@ from __future__ import division, print_function, absolute_import
 import os
 from optparse import OptionParser
 import tensorflow as tf
+import ops
 
 ttf = tf.train.Feature
 _b = lambda v: ttf(bytes_list=tf.train.BytesList(value=v))
@@ -52,7 +53,8 @@ def parse_arguments():
     nc = {}
     nc['activation_fn'] = {
         'elu':tf.nn.elu,
-        'relu':tf.nn.relu
+        'relu':tf.nn.relu,
+        'lrelu':ops.lrelu
         }[opts.AFN]
 
     nc['use_eeg'] = {

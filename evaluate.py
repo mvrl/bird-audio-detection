@@ -97,13 +97,12 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
             _conf_accum += _conf
 
             # dump activations 
-            if ix == 0:
-
-                print('Activations')
-                mv = tf.get_collection(tf.GraphKeys.ACTIVATIONS)
-                for v in mv:
-                    print(v.name)
-                    print(v.outputs.get_shape().as_list()[1:])
+            #if ix == 0:
+            #    print('Activations')
+            #    mv = tf.get_collection(tf.GraphKeys.ACTIVATIONS)
+            #    for v in mv:
+            #        print(v.name)
+            #        print(v.outputs.get_shape().as_list()[1:])
 
             if ix % 10 == 0:
                 print(_conf_accum)# / np.sum(_conf_accum))
