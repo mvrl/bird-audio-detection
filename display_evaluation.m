@@ -41,6 +41,8 @@ end
 
 %%
 
+load('performance.mat')
+
 % sort methods by min AUC
 [~,idx] = sort(min(cellfun(@(eval) eval.AUC,eval_all),[],2),'descend');
 
@@ -69,7 +71,7 @@ end
 
 disp('exporting figure')
 exportfigure(gcf,'roc.pdf',[12,5.5])
+savefig(gcf,'roc.fig')
 
-%%
-cellfun(@(eval) eval.Name, eval_all)
-imagesc(cellfun(@(eval) eval.AUC, eval_all))
+save('performance.mat','runs','names','eval_all')
+
