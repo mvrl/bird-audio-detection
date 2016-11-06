@@ -1,7 +1,9 @@
 # Entry for Bird Audio Detection Challenge
 
-
-- Link to the project: http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/
+For more information about the challenge, see the [project
+website](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
+or the [paper that summarizes the
+challenge](https://arxiv.org/abs/1608.03417).
 
 # Status
 
