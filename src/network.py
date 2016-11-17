@@ -46,25 +46,27 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, use_eeg=True, activation_fn=tf.nn.relu, capacity=1.0):
+def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
+
+    net = tf.expand_dims(net,-1)
+    net = tf.expand_dims(net,-1)
 
     with slim.arg_scope(network_arg_scope(is_training=is_training,
         activation_fn=activation_fn)):
 
+        net = slim.avg_pool2d(net,[5,1],stride=(2,1)) 
+
         net = slim.conv2d(net,np.rint(capacity*16),[5,1],stride=(2,1))
         net = slim.conv2d(net,np.rint(capacity*32),[5,1],stride=(2,1))
 
-        if use_eeg:
-            net = slim.conv2d(net,np.rint(capacity*64),[3,3],stride=(2,1))
-        else:
-            net = slim.conv2d(net,np.rint(capacity*64),[3,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*64),[3,1],stride=(2,1))
 
         net = slim.max_pool2d(net,[11,1],stride=(4,1)) 
-        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=2)
-        net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=2)
-        print(net.get_shape().as_list())
-        net = slim.conv2d(net,3,[8,1],normalizer_fn=None,activation_fn=None)
+        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(2,1))
+        net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
 
+        print(net.get_shape().as_list())
         net = slim.flatten(tf.reduce_mean(net,[1]))
 
         #print(net.get_shape().as_list())
@@ -73,6 +75,8 @@ def network(net, is_training=True, use_eeg=True, activation_fn=tf.nn.relu, capac
         #net = slim.conv2d(net,32,[7,1],stride=2)
         #net = slim.conv2d(net,64,[7,1],stride=2)
         #net = slim.conv2d(net,3,[7,1],stride=2)
+
+        net = tf.squeeze(net)
 
         return net 
 

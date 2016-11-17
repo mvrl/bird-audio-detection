@@ -2,25 +2,31 @@ from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
 import numpy as np
-import librosa
+import wave
+
+def load_wav_file(name):
+    return data0 
 
 def read_and_decode(recname,is_training=True):
 
-    #if is_training:
-    #    # dataset augmentation
-    #    offset = np.random.randint(0,100)
-    #else:
-    #    offset = 99
-
-    #feature = feature[offset:(offset+1500),:]
 
     def read_wav(f):
         basedir = '/u/eag-d1/scratch/jacobs/birddetection/wav/'
-        y, sr = librosa.load(basedir + f + '.wav')
-        return y
+        f = wave.open(basedir+f+'.wav', "rb")
+        raw = f.readframes(f.getnframes())
+        y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
+        y = y / 32768.
+        return y 
 
     (y,) = tf.py_func(read_wav, [recname], [tf.float32])
-    y = tf.reshape(y,(220500,))
+
+    if is_training:
+        # dataset augmentation
+        y = tf.reshape(y,(441000,1))
+        y = tf.random_crop(y,(440000,1))
+        y = tf.squeeze(y)
+    else:
+        y = tf.reshape(y,(441000))
 
     return y
 
@@ -37,9 +43,8 @@ def records(dataset_file,is_training=True):
     tensors = [feat, label, recname]
 
     if is_training:
-        return tf.train.shuffle_batch(tensors, batch_size=10,
-                capacity=100, min_after_dequeue=50)
+        return tf.train.shuffle_batch(tensors, batch_size=64,
+                capacity=1000, min_after_dequeue=400)
     else:
         return tf.train.batch(tensors, batch_size=20)
-
 

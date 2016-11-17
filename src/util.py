@@ -45,7 +45,7 @@ def parse_arguments():
     parser = OptionParser()
 
     parser.add_option("-a", "--activation", dest="AFN", default='relu')
-    parser.add_option("-f", "--feature", dest="FEAT", default='eeg')
+    #parser.add_option("-f", "--feature", dest="FEAT", default='eeg')
     parser.add_option("-c", "--capacity", dest="CAP", type="float", default=1.0)
 
     (opts, args) = parser.parse_args()
@@ -57,10 +57,10 @@ def parse_arguments():
         'lrelu':ops.lrelu
         }[opts.AFN]
 
-    nc['use_eeg'] = {
-        'eeg':True,
-        'piezo':False
-        }[opts.FEAT]
+    #nc['use_eeg'] = {
+    #    'eeg':True,
+    #    'piezo':False
+    #    }[opts.FEAT]
 
     nc['capacity'] = opts.CAP
 
@@ -70,11 +70,6 @@ def run_name(nc):
 
     # define run name
     run_name = nc['activation_fn'].func_name
-
-    if nc['use_eeg']:
-        run_name += '_eeg'
-    else:
-        run_name += '_piezo'
 
     run_name += '_{:0.2f}'.format(nc['capacity'])
 

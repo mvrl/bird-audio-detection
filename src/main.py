@@ -1,6 +1,3 @@
-# TODO non-uniform cost matrix (penalize false REM)
-# TODO add wake / sleep loss 
-
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -37,23 +34,14 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    features, label, _, _ = dataset.records(
-            '/u/eag-d1/scratch/jacobs/birddetection/ff1010bird_metadata.csv',
-            is_training=True)
-
-    label = tf.reshape(label,[-1])
+    feat, label, recname = dataset.records(
+            '/u/eag-d1/scratch/jacobs/birddetection/ff1010bird_metadata.csv')
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(features,
+    logits = network.network(feat,
             is_training=True,**nc)
-            #use_eeg=nc['use_eeg'],
-            #activation_fn=nc['activation_fn'],
-            #capacity=nc['capacity'])
-
-    # replicate because we have two annotaters
-    logits = tf.concat(0,(logits,logits))
 
 with tf.variable_scope('Loss'):
     print('Defining loss functions')
@@ -63,7 +51,7 @@ with tf.variable_scope('Loss'):
             logits,
             label)
 
-    prediction = tf.argmax(logits,1)
+    prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
     loss_class = 10*tf.reduce_mean(loss_class)
     #loss_class = tf.reduce_mean(loss_class)
@@ -79,8 +67,6 @@ with tf.variable_scope('Train'):
     train_op = optimizer.minimize(loss,global_step=global_step)
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
-    acc_match = tf.contrib.metrics.accuracy(label1,label2)
-    conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(3,tf.int64),dtype=tf.int64)
 
 with tf.Session() as sess:
 
@@ -102,21 +88,14 @@ with tf.Session() as sess:
     print('Starting training')
     while _i < 10000:
 
-        sess.run([features,label])
-
-        _,_,_i,_loss,_acc,_acc_match,_conf = sess.run([
+        _,_,_i,_loss,_acc = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
-            acc,
-            acc_match,
-            conf
+            acc
             ])
-        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc) + ' : ' + str(_acc_match))
-
-        if _i % 10 == 0:
-            print(_conf)
+        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
 
 	if _i % 1000 == 0:
 	    print("saving total checkpoint")
