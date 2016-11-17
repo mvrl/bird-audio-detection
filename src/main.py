@@ -37,21 +37,11 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    features, label1, label2, _, _ = dataset.records('train.txt',
-            use_eeg=nc['use_eeg'],
+    features, label, _, _ = dataset.records(
+            '/u/eag-d1/scratch/jacobs/birddetection/ff1010bird_metadata.csv',
             is_training=True)
 
-    # why is this necessary?
-    label1 = tf.reshape(label1,[-1])
-    label2 = tf.reshape(label2,[-1])
-
-    label = tf.concat(0,(label1,label2))
-
-    # weights to make sure infrequent classes have higher weight 
-    # TODO make a moving average of the weight 
-    _, idx, count = tf.unique_with_counts(label)
-    count = tf.cast(count,tf.float32)
-    weight = 3.*tf.gather(tf.reduce_mean(count) / (1. + count),idx)
+    label = tf.reshape(label,[-1])
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -75,7 +65,7 @@ with tf.variable_scope('Loss'):
 
     prediction = tf.argmax(logits,1)
 
-    loss_class = 10*tf.reduce_mean(weight*loss_class)
+    loss_class = 10*tf.reduce_mean(loss_class)
     #loss_class = tf.reduce_mean(loss_class)
 
     loss = loss_class + reg 
@@ -111,8 +101,9 @@ with tf.Session() as sess:
 
     print('Starting training')
     while _i < 10000:
-        #print(sess.run((tf.reduce_mean(features),tf.reduce_mean(tf.square(features)))))
-        #continue
+
+        sess.run([features,label])
+
         _,_,_i,_loss,_acc,_acc_match,_conf = sess.run([
             train_op,
             update_ops,

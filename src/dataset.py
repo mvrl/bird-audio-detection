@@ -2,65 +2,44 @@ from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
 import numpy as np
+import librosa
 
-def read_and_decode(dataset_file,use_eeg=True,is_training=True):
+def read_and_decode(recname,is_training=True):
 
-    reader = tf.TFRecordReader(
-            options=tf.python_io.TFRecordOptions(
-                tf.python_io.TFRecordCompressionType.ZLIB))
+    #if is_training:
+    #    # dataset augmentation
+    #    offset = np.random.randint(0,100)
+    #else:
+    #    offset = 99
 
-    _, serialized_example = reader.read(dataset_file)
+    #feature = feature[offset:(offset+1500),:]
 
-    features = tf.parse_single_example(
-        serialized_example,
-        features={
-            'Piezo': tf.FixedLenFeature([1600,1,1],tf.float32),
-            'EEG1': tf.FixedLenFeature([1600,1,1],tf.float32),
-            'EEG2': tf.FixedLenFeature([1600,1,1],tf.float32),
-            'EMG': tf.FixedLenFeature([1600,1,1],tf.float32),
-            'label': tf.FixedLenFeature([1,2], tf.int64), # there were two annotaters
-            'file': tf.FixedLenFeature([],tf.string),
-            'row': tf.FixedLenFeature([1], tf.int64)
-        })
+    def read_wav(f):
+        basedir = '/u/eag-d1/scratch/jacobs/birddetection/wav/'
+        y, sr = librosa.load(basedir + f + '.wav')
+        return y
 
-    piezo = 2*(features['Piezo'] - 2.47)
-    eeg1 = features['EEG1'] / 30.
-    eeg2 = features['EEG2'] / 80.
-    emg = features['EMG'] / 30.
+    (y,) = tf.py_func(read_wav, [recname], [tf.float32])
+    y = tf.reshape(y,(220500,))
 
-    if use_eeg: 
-        feature = tf.concat(1,(eeg1,eeg2,emg))
-    else:
-        feature = piezo 
+    return y
 
-    if is_training:
-        # dataset augmentation
-        offset = np.random.randint(0,100)
-    else:
-        offset = 99
+def records(dataset_file,is_training=True):
 
-    feature = feature[offset:(offset+1500),:]
+    fq = tf.train.string_input_producer([dataset_file])
+    reader = tf.TextLineReader(skip_header_lines=1)
+    key, value = reader.read(fq)
+    defaults = [['missing'],[0]]
+    recname, label= tf.decode_csv(value,record_defaults=defaults)
 
-    label1, label2 = tf.split(1,2,features['label'] - 1)
+    feat = read_and_decode(recname)
 
-
-    label1 = tf.reshape(label1,[-1])
-    label2 = tf.reshape(label2,[-1])
-
-    return feature,label1,label2,features['row'],features['file']
-
-def records(dataset_file,datadir='./records/',use_eeg=True,is_training=True):
-
-    qs = []
-    for d in [tmp.strip() for tmp in open(dataset_file, 'r')]:
-
-        fq = tf.train.string_input_producer([datadir + d + '.tfrecord'])
-        qs.append(read_and_decode(fq,use_eeg=use_eeg,is_training=is_training))
+    tensors = [feat, label, recname]
 
     if is_training:
-        return tf.train.shuffle_batch_join(qs, batch_size=256,
-                capacity=10000, min_after_dequeue=5000)
+        return tf.train.shuffle_batch(tensors, batch_size=10,
+                capacity=100, min_after_dequeue=50)
     else:
-        return tf.train.batch_join(qs, batch_size=512)
+        return tf.train.batch(tensors, batch_size=20)
 
 
