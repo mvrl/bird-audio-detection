@@ -1,6 +1,3 @@
-# TODO include dataset name and record number in the output file so we
-# can compare across datasets
-
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -36,32 +33,20 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    features, label1, label2, data_row, fileid = dataset.records('test.txt',
-            use_eeg=nc['use_eeg'],
+    feat, label, recname = dataset.records(
+            '/home/nja224/data/birddetection/ff1010bird_metadata.csv',
             is_training=False)
-
-    label_output = tf.concat(1,(label1,label2))
-
-    # why is this necessary?
-    label1 = tf.reshape(label1,[-1])
-    label2 = tf.reshape(label2,[-1])
-
-    label = tf.concat(0,(label1,label2))
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(features,is_training=False,**nc)
+    logits = network.network(feat,is_training=False,**nc)
 
     probs = tf.nn.softmax(logits)
-
-    # replicate because we have two annotaters
-    logits = tf.concat(0,(logits,logits))
-
-    prediction = tf.argmax(logits,1)
+    prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
-    conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(3,tf.int64),dtype=tf.int64)
+    conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(2,tf.int64),dtype=tf.int64)
 
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     
@@ -78,20 +63,20 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         saver.restore(sess, ckpt.model_checkpoint_path)
 
     print('Starting evaluation')
-    _conf_accum = np.zeros((3,3), dtype=np.int64)
+    _conf_accum = np.zeros((2,2), dtype=np.int64)
 
     with open(out_file,'w') as output:
 
         for ix in xrange(10000):
 
-            _conf,_acc,_prob,_label_output,_data_row,_fileid = \
-               sess.run([conf,acc,probs,label_output,data_row,fileid])
+            _conf,_acc,_prob,_label = \
+               sess.run([conf,acc,probs,label])
 
-            _fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
+            #_fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
 
             np.savetxt(output,
-                    np.concatenate((_fileid,_data_row,_prob,_label_output+1),axis=1),
-                    fmt='%u %u %1.8f %1.8f %1.8f %u %u') 
+                    np.concatenate((_label.reshape((-1,1)),_prob),axis=1),
+                    fmt='%u %1.8f %1.8f') 
 
             print('Accuracy = {}'.format(_acc))
             _conf_accum += _conf
