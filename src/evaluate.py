@@ -34,8 +34,11 @@ with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
     feat, label, recname = dataset.records(
-            '/home/nja224/data/birddetection/ff1010bird_metadata.csv',
+            '/home/nja224/data/birddetection/warblrb10k_public_metadata.csv',
             is_training=False)
+    #feat, label, recname = dataset.records(
+    #        '/home/nja224/data/birddetection/ff1010bird_metadata.csv',
+    #        is_training=False)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -43,7 +46,9 @@ with tf.variable_scope('Predictor'):
     logits = network.network(feat,is_training=False,**nc)
 
     probs = tf.nn.softmax(logits)
+    print(logits)
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
+    print(prediction)
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(2,tf.int64),dtype=tf.int64)
@@ -69,8 +74,8 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
         for ix in xrange(10000):
 
-            _conf,_acc,_prob,_label = \
-               sess.run([conf,acc,probs,label])
+            _conf,_acc,_prob,_label,_recname = \
+               sess.run([conf,acc,probs,label,recname])
 
             #_fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
 
