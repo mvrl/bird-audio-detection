@@ -11,7 +11,7 @@ def read_and_decode(recname,is_training=True):
 
 
     def read_wav(f):
-        basedir = '/u/eag-d1/scratch/jacobs/birddetection/wav/'
+        basedir = '/home/nja224/data/birddetection/wav/'
         f = wave.open(basedir+f+'.wav', "rb")
         raw = f.readframes(f.getnframes())
         y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
@@ -23,7 +23,8 @@ def read_and_decode(recname,is_training=True):
     if is_training:
         # dataset augmentation
         y = tf.reshape(y,(441000,1))
-        y = tf.random_crop(y,(440000,1))
+        y = tf.random_crop(y,(400000,1))
+        #y = tf.random_crop(y,(440000,1))
         y = tf.squeeze(y)
     else:
         y = tf.reshape(y,(441000))

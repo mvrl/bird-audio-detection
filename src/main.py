@@ -35,7 +35,7 @@ with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
     feat, label, recname = dataset.records(
-            '/u/eag-d1/scratch/jacobs/birddetection/ff1010bird_metadata.csv')
+            '/home/nja224/data/birddetection/ff1010bird_metadata.csv')
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -68,7 +68,10 @@ with tf.variable_scope('Train'):
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
 
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+
+with tf.Session(config=config) as sess:
 
     update_ops = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS))
     

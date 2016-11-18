@@ -1,3 +1,4 @@
 #!/bin/bash
 
-source activate donohue
+source activate tensorflow 
+

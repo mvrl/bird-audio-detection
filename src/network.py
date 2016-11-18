@@ -54,20 +54,22 @@ def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
     with slim.arg_scope(network_arg_scope(is_training=is_training,
         activation_fn=activation_fn)):
 
-        net = slim.avg_pool2d(net,[5,1],stride=(2,1)) 
+        net = slim.avg_pool2d(net,[5,1],stride=(5,1)) 
+        #net = slim.conv2d(net,capacity*8,[5,1],stride=(5,1)) 
 
         net = slim.conv2d(net,np.rint(capacity*16),[5,1],stride=(2,1))
         net = slim.conv2d(net,np.rint(capacity*32),[5,1],stride=(2,1))
 
         net = slim.conv2d(net,np.rint(capacity*64),[3,1],stride=(2,1))
 
-        net = slim.max_pool2d(net,[11,1],stride=(4,1)) 
+        net = slim.max_pool2d(net,[11,1],stride=(5,1)) 
+
         net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(2,1))
         net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(2,1))
         net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
 
         print(net.get_shape().as_list())
-        net = slim.flatten(tf.reduce_mean(net,[1]))
+        net = slim.flatten(tf.reduce_max(net,[1]))
 
         #print(net.get_shape().as_list())
 
