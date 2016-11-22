@@ -5,9 +5,6 @@ import numpy as np
 import wave
 import ops
 
-def load_wav_file(name):
-    return data0 
-
 def read_and_decode(recname,is_training=True):
 
 
