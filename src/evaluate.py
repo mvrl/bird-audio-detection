@@ -78,7 +78,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                     np.concatenate((_label.reshape((-1,1)),_prob),axis=1),
                     fmt='%u %1.8f %1.8f') 
 
-            print('Accuracy = {0:.2f} AUC = {1:.2f}'.format(_acc,_auc))
+            print('Accuracy = {0:.3f} AUC = {1:.3f}'.format(_acc,_auc))
             _conf_accum += _conf
 
             # dump activations 
