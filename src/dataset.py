@@ -55,7 +55,7 @@ def records(is_training=True):
         tensors.append((feat, label, recname))
 
     if is_training:
-        if False:
+        if True:
             return tf.train.shuffle_batch_join(tensors, batch_size=64,
                     capacity=1000, min_after_dequeue=400)
         else:
@@ -68,12 +68,13 @@ def records(is_training=True):
             feat2,label2,rec2 = tf.train.shuffle_batch_join(tensors, batch_size=64,
                     capacity=1000, min_after_dequeue=400)
 
-            feat = feat1 + feat2
+            feat = .5*(feat1 + feat2)
             label = tf.minimum(1,label1 + label2) # element-wise or
             recname = rec1 + '|' + rec2 
 
             return feat, label, recname
 
     else:
-        return tf.train.batch_join(tensors, batch_size=64, num_threads=32)
+        return tf.train.shuffle_batch_join(tensors, batch_size=64,
+                    capacity=1000, min_after_dequeue=400)
 
