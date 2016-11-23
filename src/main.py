@@ -101,7 +101,7 @@ with tf.Session(config=config) as sess:
 
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
 
-	if _i % 1000 == 0:
+	if _i % 100 == 0:
 	    print("saving total checkpoint")
 	    saver.save(sess, FLAGS.checkpoint_dir + 'model.ckpt', global_step=_i)
 
