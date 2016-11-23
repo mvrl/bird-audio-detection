@@ -55,10 +55,25 @@ def records(is_training=True):
         tensors.append((feat, label, recname))
 
     if is_training:
-        # TODO make two of these and randomly join them as a form of
-        # data augmentation
-        return tf.train.shuffle_batch_join(tensors, batch_size=64,
-                capacity=1000, min_after_dequeue=400)
+        if False:
+            return tf.train.shuffle_batch_join(tensors, batch_size=64,
+                    capacity=1000, min_after_dequeue=400)
+        else:
+
+            # combine two audio files, if one contains a bird and the
+            # other doesn't, then the summation contains a bird
+
+            feat1,label1,rec1 = tf.train.shuffle_batch_join(tensors, batch_size=64,
+                    capacity=1000, min_after_dequeue=400)
+            feat2,label2,rec2 = tf.train.shuffle_batch_join(tensors, batch_size=64,
+                    capacity=1000, min_after_dequeue=400)
+
+            feat = feat1 + feat2
+            label = tf.minimum(1,label1 + label2) # element-wise or
+            recname = rec1 + '|' + rec2 
+
+            return feat, label, recname
+
     else:
         return tf.train.batch_join(tensors, batch_size=64, num_threads=32)
 
