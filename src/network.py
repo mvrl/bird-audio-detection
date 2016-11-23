@@ -48,6 +48,36 @@ def network_arg_scope(
 
 def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
+    Nb = net.get_shape()[0]
+
+    net = tf.reshape(net,(-1,2000,200))
+    net = tf.expand_dims(net,-1)
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        # extract window features
+        net = slim.conv2d(net,np.rint(capacity*8),[1,5],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*16),[1,5],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*32),[1,5],stride=(1,2))
+        net = tf.reduce_max(net,[2],keep_dims=True)
+
+        # combine window features
+        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(1,1))
+        net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(1,1))
+        net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(tf.reduce_max(net,[1]))
+
+        net = tf.squeeze(net)
+
+        return net 
+
+def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
+    # a simple network that works entirely in the temporal domain
+    # first step is to avg_pool2d to make it small enough to not break
+    # tensorflow.
+
     net = tf.expand_dims(net,-1)
     net = tf.expand_dims(net,-1)
 
@@ -55,7 +85,6 @@ def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         activation_fn=activation_fn)):
 
         net = slim.avg_pool2d(net,[5,1],stride=(5,1)) 
-        #net = slim.conv2d(net,capacity*8,[5,1],stride=(5,1)) 
 
         net = slim.conv2d(net,np.rint(capacity*16),[5,1],stride=(2,1))
         net = slim.conv2d(net,np.rint(capacity*32),[5,1],stride=(2,1))
@@ -68,17 +97,8 @@ def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(2,1))
         net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
 
-        print(net.get_shape().as_list())
         net = slim.flatten(tf.reduce_max(net,[1]))
-
-        #print(net.get_shape().as_list())
-
-        #net = slim.conv2d(net,16,[7,1],stride=2)
-        #net = slim.conv2d(net,32,[7,1],stride=2)
-        #net = slim.conv2d(net,64,[7,1],stride=2)
-        #net = slim.conv2d(net,3,[7,1],stride=2)
 
         net = tf.squeeze(net)
 
         return net 
-
