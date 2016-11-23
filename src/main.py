@@ -89,7 +89,7 @@ with tf.Session(config=config) as sess:
     _i = sess.run(global_step)
 
     print('Starting training')
-    while _i < 10000:
+    while _i < 30000:
 
         _,_,_i,_loss,_acc = sess.run([
             train_op,
@@ -98,6 +98,7 @@ with tf.Session(config=config) as sess:
             loss,
             acc
             ])
+
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
 
 	if _i % 1000 == 0:

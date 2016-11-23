@@ -3,6 +3,7 @@ from __future__ import division, print_function, absolute_import
 import tensorflow as tf
 import numpy as np
 import wave
+import glob
 import ops
 
 def read_and_decode(recname,is_training=True):
@@ -21,35 +22,43 @@ def read_and_decode(recname,is_training=True):
 
     y = tf.py_func(read_wav, [recname], [tf.float32])
 
-    if is_training:
-        # dataset augmentation
-        y = tf.reshape(y,(441000,1))
-        y = tf.random_crop(y,(400000,1))
-        y = tf.squeeze(y)
-    else:
-        y = tf.reshape(y,(-1,1,1))
-        # warblr dataset is variably sized (pad then crop as a lazy # solution)
-        y = ops.resize_image_with_crop_or_pad(y,441000,1)
-        y = tf.random_crop(y,(400000,1,1)) 
-        y = tf.squeeze(y)
+    # warblr dataset has variable length audio files
+    # pad then crop as a lazy solution
+    y = tf.reshape(y,(-1,1,1))
+    y = ops.resize_image_with_crop_or_pad(y,441000,1)
+    y = tf.random_crop(y,(400000,1,1)) 
+    y = tf.squeeze(y)
 
     return y
 
-def records(dataset_file,is_training=True):
-
-    fq = tf.train.string_input_producer([dataset_file])
-    reader = tf.TextLineReader(skip_header_lines=1)
-    key, value = reader.read(fq)
-    defaults = [['missing'],[0]]
-    recname, label = tf.decode_csv(value,record_defaults=defaults)
-
-    feat = read_and_decode(recname,is_training=is_training)
-
-    tensors = [feat, label, recname]
+def records(is_training=True):
 
     if is_training:
-        return tf.train.shuffle_batch(tensors, batch_size=64,
+        names = glob.glob('./dataset/*0[0-8]')
+    else:
+        names = glob.glob('./dataset/*09')
+
+    if not names:
+        raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.sh')
+
+    tensors = []
+    for f in names:
+
+        fq = tf.train.string_input_producer(names)
+        reader = tf.TextLineReader()
+        key, value = reader.read(fq)
+        defaults = [['missing'],[0]]
+        recname, label = tf.decode_csv(value,record_defaults=defaults)
+
+        feat = read_and_decode(recname,is_training=is_training)
+
+        tensors.append((feat, label, recname))
+
+    if is_training:
+        # TODO make two of these and randomly join them as a form of
+        # data augmentation
+        return tf.train.shuffle_batch_join(tensors, batch_size=64,
                 capacity=1000, min_after_dequeue=400)
     else:
-        return tf.train.batch(tensors, batch_size=64, num_threads=32)
+        return tf.train.batch_join(tensors, batch_size=64, num_threads=32)
 
