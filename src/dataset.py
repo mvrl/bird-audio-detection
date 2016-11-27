@@ -6,6 +6,8 @@ import wave
 import glob
 import ops
 
+d = 400000 # number of audio samples for learning
+
 def read_and_decode(recname,is_training=True):
 
 
@@ -24,9 +26,31 @@ def read_and_decode(recname,is_training=True):
 
     # warblr dataset has variable length audio files
     # pad then crop as a lazy solution
+
     y = tf.reshape(y,(-1,1,1))
-    y = ops.resize_image_with_crop_or_pad(y,441000,1)
-    y = tf.random_crop(y,(400000,1,1)) 
+
+    def fixshort(y):
+        # too long, so pad to correct length
+
+        y = ops.resize_image_with_crop_or_pad(y,d,1)
+        y = tf.reshape(y,(d,1,1))
+        return y
+
+    def fixlong(y):
+        # too long, so take a random crop
+
+        # could add the following to force it to be a random crop from
+        # near the beginning of the file
+
+        #y = ops.resize_image_with_crop_or_pad(y,441000,1)
+        y = tf.random_crop(y,(d,1,1)) 
+        return y
+
+    y = tf.cond(
+            tf.size(y) <= d,
+            lambda: fixshort(y),
+            lambda: fixlong(y))
+
     y = tf.squeeze(y)
 
     return y
