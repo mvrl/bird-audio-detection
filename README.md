@@ -29,7 +29,7 @@ the correct setting for `TF_BINARY_URL` from the tensorflow website, then run
 
 1. Download the training datasets from the [project website]
 http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
-1. Unpack the datasets (TODO: put them in a standard place probably ./data/ in the repo root)
+1. Unpack the datasets (TODO: currently this goes in ~/data/birddetection, but we should probably put them in a standard place in the repo root, such as ./data/)
 1. (currently not necessary) Create training/testing splits (TODO: write a script to make training and testing splits)
 
 ## Run the training script:
