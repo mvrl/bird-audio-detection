@@ -1,3 +1,4 @@
+
 clear
 
 %% load data
@@ -15,7 +16,7 @@ for irun = 1:numel(runs)
   
   % WARNING: only using a subset of the testing data
   log('loading data')
-  data = dlmread(['checkpoint/' run '/output.csv'],' ',[0,0,1550,2]);
+  data = dlmread(['../checkpoint/' run '/output.csv'],' ',[0,0,1550,2]);
   
   %% make 1-vs-all ROC curves
   
