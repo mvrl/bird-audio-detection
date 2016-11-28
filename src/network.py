@@ -9,6 +9,7 @@ def network_arg_scope(
         is_training=True,
         batch_norm_var_collection='moving_vars',
         activation_fn=tf.nn.relu):
+    ''' Sets default parameters for network layers.'''
 
     batch_norm_params = {
         # Decay for the moving averages.
@@ -46,7 +47,42 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
+def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, network='v3'):
+
+    print('Using network ' + network + '.')
+    return networks[network](net, 
+        is_training=is_training, 
+        activation_fn=activation_fn, 
+        capacity=capacity)
+
+def network_v3(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
+
+    Nb = net.get_shape()[0]
+
+    net = tf.reshape(net,(-1,2000,200))
+    net = tf.expand_dims(net,-1)
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        # extract window features
+        net = slim.conv2d(net,np.rint(capacity*100),[1,150],stride=(1,11))
+        net = slim.conv2d(net,np.rint(capacity*100),[1,1],stride=(1,1))
+        net = slim.conv2d(net,np.rint(capacity*100),[1,1],stride=(1,1))
+        net = tf.reduce_max(net,[2],keep_dims=True)
+
+        # combine window features
+        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(1,1))
+        net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(1,1))
+        net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(tf.reduce_max(net,[1]))
+
+        net = tf.squeeze(net)
+
+        return net 
+
+def network_v2(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
     Nb = net.get_shape()[0]
 
@@ -102,3 +138,10 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         net = tf.squeeze(net)
 
         return net 
+
+networks = {
+        'v3':network_v3,
+        'v2':network_v2,
+        'v1':network_v1
+        }
+

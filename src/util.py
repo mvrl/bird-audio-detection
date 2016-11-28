@@ -45,6 +45,7 @@ def parse_arguments():
     parser = OptionParser()
 
     parser.add_option("-a", "--activation", dest="AFN", default='relu')
+    parser.add_option("-n", "--network", dest="NET", default='v2')
     #parser.add_option("-f", "--feature", dest="FEAT", default='eeg')
     parser.add_option("-c", "--capacity", dest="CAP", type="float", default=1.0)
 
@@ -57,10 +58,7 @@ def parse_arguments():
         'lrelu':ops.lrelu
         }[opts.AFN]
 
-    #nc['use_eeg'] = {
-    #    'eeg':True,
-    #    'piezo':False
-    #    }[opts.FEAT]
+    nc['network'] = opts.NET
 
     nc['capacity'] = opts.CAP
 
@@ -69,7 +67,8 @@ def parse_arguments():
 def run_name(nc):
 
     # define run name
-    run_name = nc['activation_fn'].func_name
+    run_name = nc['network']
+    run_name += '_' + nc['activation_fn'].func_name
 
     run_name += '_{:0.2f}'.format(nc['capacity'])
 
