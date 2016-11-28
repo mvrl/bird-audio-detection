@@ -3,17 +3,19 @@ from __future__ import division, print_function, absolute_import
 import tensorflow as tf
 import numpy as np
 import wave
+import os
 import glob
 import ops
 
 d = 400000 # number of audio samples for learning
+
+basedir = os.path.expanduser('~/data/birddetection/wav/')
 
 def read_and_decode(recname,is_training=True):
 
 
     def read_wav(f):
         try:
-            basedir = '/home/nja224/data/birddetection/wav/'
             fid = wave.open(basedir+f+'.wav', "rb")
             raw = fid.readframes(fid.getnframes())
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
