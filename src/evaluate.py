@@ -33,7 +33,7 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records(is_training=False)
+    feat, label, recname = dataset.records(is_training=False,batch_size=100)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -67,7 +67,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     with open(out_file,'w') as output:
 
-        for ix in xrange(10000):
+        for ix in xrange(16):
 
             _conf,_acc,_auc,_,_,_prob,_label,_recname = \
                sess.run([conf,acc,auc,acc_up,auc_up,probs,label,recname])

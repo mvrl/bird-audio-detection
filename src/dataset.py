@@ -57,7 +57,7 @@ def read_and_decode(recname,is_training=True):
 
     return y
 
-def records(is_training=True):
+def records(is_training=True,batch_size=64):
 
     if is_training:
         names = glob.glob('./dataset/*0[0-8]')
@@ -82,16 +82,16 @@ def records(is_training=True):
 
     if is_training:
         if True:
-            return tf.train.shuffle_batch_join(tensors, batch_size=64,
+            return tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
                     capacity=1000, min_after_dequeue=400)
         else:
 
             # combine two audio files, if one contains a bird and the
             # other doesn't, then the summation contains a bird
 
-            feat1,label1,rec1 = tf.train.shuffle_batch_join(tensors, batch_size=64,
+            feat1,label1,rec1 = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
                     capacity=1000, min_after_dequeue=400)
-            feat2,label2,rec2 = tf.train.shuffle_batch_join(tensors, batch_size=64,
+            feat2,label2,rec2 = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
                     capacity=1000, min_after_dequeue=400)
 
             feat = .5*(feat1 + feat2)
@@ -101,6 +101,5 @@ def records(is_training=True):
             return feat, label, recname
 
     else:
-        return tf.train.shuffle_batch_join(tensors, batch_size=64,
-                    capacity=1000, min_after_dequeue=400)
+        return tf.train.batch_join(tensors, batch_size=batch_size)
 
