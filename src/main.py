@@ -105,6 +105,8 @@ with tf.Session(config=config) as sess:
 	    print("saving total checkpoint")
 	    saver.save(sess, FLAGS.checkpoint_dir + 'model.ckpt', global_step=_i)
 
+    print('Cleaning up')
     coord.request_stop()
     coord.join(threads)
+    print('Done')
 
