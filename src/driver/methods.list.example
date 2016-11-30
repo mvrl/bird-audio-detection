@@ -1,0 +1,4 @@
+-n v2.1 -a elu -c 1 
+-n v2.1 -a lrelu -c 1 
+-n v2.1 -a lrelu -c 0.8 
+-n v2.1 -a lrelu -c 1.2 
