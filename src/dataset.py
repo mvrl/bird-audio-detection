@@ -57,7 +57,7 @@ def read_and_decode(recname,is_training=True):
 
     return y
 
-def records(is_training=True,batch_size=64):
+def records(is_training=True,batch_size=64,exclude_positive=False,augment_with_negatives=False):
 
     if is_training:
         names = glob.glob('./dataset/*0[0-8]')
@@ -78,28 +78,59 @@ def records(is_training=True,batch_size=64):
 
         feat = read_and_decode(recname,is_training=is_training)
 
+        #
+        # filter by label (if requested)
+        #
+
+        # add batch dimension to support filtering by label
+        feat = tf.expand_dims(feat,0)
+        recname = tf.expand_dims(recname,0)
+        recname = tf.expand_dims(recname,0)
+        tmp = label
+        label = tf.expand_dims(label,0)
+
+        if exclude_positive:
+
+            feat = feat[0:(1-tmp),:]
+            recname = recname[0:(1-tmp),:]
+            label = label[0:(1-tmp)]
+
         tensors.append((feat, label, recname))
 
     if is_training:
-        if True:
-            return tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
-                    capacity=1000, min_after_dequeue=400)
-        else:
 
-            # combine two audio files, if one contains a bird and the
-            # other doesn't, then the summation contains a bird
+        feat, label, recname = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
+                    capacity=1000, min_after_dequeue=400,
+                    enqueue_many=True)
 
-            feat1,label1,rec1 = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
-                    capacity=1000, min_after_dequeue=400)
-            feat2,label2,rec2 = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
-                    capacity=1000, min_after_dequeue=400)
+        if augment_with_negatives:
 
-            feat = .5*(feat1 + feat2)
-            label = tf.minimum(1,label1 + label2) # element-wise or
-            recname = rec1 + '|' + rec2 
+            # idea: add in a negative example to decrease the signal
+            # to noise ratio, but also reduce overfitting and help
+            # generalization
 
-            return feat, label, recname
+            # load training examples, but filter out positive examples
+            # if we don't do this, then we get way to many positives
+            # after we combine them below 
+            feat_noise,label_noise,recname_noise = records(
+                    is_training=is_training,
+                    augment_with_negatives=False,
+                    batch_size=batch_size,
+                    exclude_positive=True) # only use non bird audio as noise 
+
+            # combine the two audio files
+            # MAYBE it might help to randomize this a bit
+            feat = .9*feat + .1*feat_noise
+
+            # update the label, currently not needed because we
+            # label_noise should always be negative
+            label = tf.minimum(1,label + label_noise) # element-wise or
+
+            recname = recname + '|' + recname_noise 
+
+        return feat, label, recname
 
     else:
-        return tf.train.batch_join(tensors, batch_size=batch_size)
+        return tf.train.batch_join(tensors, batch_size=batch_size,
+                enqueue_many=True)
 
