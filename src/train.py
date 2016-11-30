@@ -34,8 +34,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records(
-            '/home/nja224/data/birddetection/ff1010bird_metadata.csv')
+    feat, label, recname = dataset.records()
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
