@@ -13,8 +13,8 @@ slim = tf.contrib.slim
 #
 #
 
-nc = util.parse_arguments()
-run_name = util.run_name(nc)
+nc,dc = util.parse_arguments()
+run_name = util.run_name(nc,dc)
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -33,7 +33,7 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records(is_training=False,batch_size=100)
+    feat, label, recname = dataset.records(is_training=False,batch_size=100,**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
