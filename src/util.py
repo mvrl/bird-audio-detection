@@ -11,11 +11,12 @@ def parse_arguments():
 
     parser.add_option("-a", "--activation", dest="AFN", default='relu')
     parser.add_option("-n", "--network", dest="NET", default='v2')
-    #parser.add_option("-f", "--feature", dest="FEAT", default='eeg')
     parser.add_option("-c", "--capacity", dest="CAP", type="float", default=1.0)
+    parser.add_option("-A", action="store_true", dest="AUG", default=False)
 
     (opts, args) = parser.parse_args()
 
+    # specify network configuration
     nc = {}
     nc['activation_fn'] = {
         'elu':tf.nn.elu,
@@ -27,15 +28,21 @@ def parse_arguments():
 
     nc['capacity'] = opts.CAP
 
-    return nc
+    # specify dataset configuration
+    dc = {}
+    dc['augment_with_negatives'] = opts.AUG 
 
-def run_name(nc):
+    return nc, dc
+
+def run_name(nc,dc):
 
     # define run name
     run_name = nc['network']
     run_name += '_' + nc['activation_fn'].func_name
 
     run_name += '_{:0.2f}'.format(nc['capacity'])
+
+    run_name += 'yes' if dc['augment_with_negatives'] else 'no'
 
     return run_name
 

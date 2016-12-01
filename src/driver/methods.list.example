@@ -1,4 +1,20 @@
--n v2.1 -a elu -c 1 
--n v2.1 -a lrelu -c 1 
+-n v2 -a elu -c 1
+-n v2 -a lrelu -c 1
+-n v2 -a relu -c 1
+-n v2.1 -a elu -c 0.8
+-n v2.1 -a elu -c 0.8 -A
+-n v2.1 -a elu -c 1
+-n v2.1 -a elu -c 1 -A
+-n v2.1 -a elu -c 1.2
+-n v2.1 -a elu -c 1.2 -A
+-n v2.1 -a elu -c 1.4
+-n v2.1 -a elu -c 1.4 -A
+-n v2.1 -a lrelu -c 0.8
 -n v2.1 -a lrelu -c 0.8 
+-n v2.1 -a lrelu -c 1
+-n v2.1 -a lrelu -c 1
+-n v2.1 -a lrelu -c 1.2
 -n v2.1 -a lrelu -c 1.2 
+-n v2.1 -a relu -c 1
+-n v2.2 -a relu -c 1
+-n v3 -a relu -c 1
