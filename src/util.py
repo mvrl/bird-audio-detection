@@ -42,7 +42,7 @@ def run_name(nc,dc):
 
     run_name += '_{:0.2f}'.format(nc['capacity'])
 
-    run_name += 'yes' if dc['augment_with_negatives'] else 'no'
+    run_name += '_yes' if dc['augment_with_negatives'] else '_no'
 
     return run_name
 
