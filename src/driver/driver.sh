@@ -14,5 +14,5 @@ rm -rf checkpoint/*/output.csv
 # single GPU
 parallel -P ${NGPU} --line-buffer --rpl '{gpuid} $_ = $job->slot() - 1' \
   CUDA_VISIBLE_DEVICES={gpuid} \
-  ./train_test.sh {} :::: methods.list
+  ./driver/train_test.sh {} :::: ./driver/methods.list
 
