@@ -38,6 +38,12 @@ http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
 1. `python main.py`: this will put checkpoints in the checkpoint directory
 1. `python evaluate.py`: this uses the checkpoints to generate an output script 
 
+## Training multiple models:
+
+1. `cd ./src/driver`
+1. `./driver.sh` : this uses GNU parallel to train multiple models.  it is currently configured to work on a machine
+with two GPUs
+
 # Contributing
 
 If you are new to git and github, I encourage you to read this [guide to
