@@ -2,8 +2,11 @@
 clear
 
 %% load data
-runs = dir('../checkpoint/*_*');
-runs = {runs.name};
+
+runs = dir('../checkpoint/*_*/output.csv');
+runs = ...
+  cellfun(@(x) x((find(x == '/',1,'last')+1):end), ...
+  {runs.folder},'UniformOutput',false);
 
 % results across all datasets
 eval_all = cell(numel(runs),1);
