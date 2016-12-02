@@ -2,11 +2,18 @@ import os
 import zipfile
 import shutil
 import requests
+from collections import defaultdict
 
-freefield1010_labels = 'https://ndownloader.figshare.com/files/6035814'
-freefield1010_audio  = 'https://archive.org/download/ff1010bird/ff1010bird_wav.zip'
-warblr_labels = 'https://ndownloader.figshare.com/files/6035817'
-warblr_audio  = 'https://archive.org/download/warblrb10k_public/warblrb10k_public_wav.zip'
+label_base = 'https://ndownloader.figshare.com/files/'
+audio_base = 'https://archive.org/download/'
+data_base  = '../../data/'
+
+datasets = {
+    'freefield1010' : { 'labels' : '6035814',
+                        'audio'  : 'ff1010bird/ff1010bird_wav.zip' },
+    'warblr'        : { 'labels' : '6035817',
+                        'audio'  : 'warblrb10k_public/warblrb10k_public_wav.zip' }
+}
 
 def unzip_file(source, dest):
     zip_ref = zipfile.ZipFile(source, 'r')
@@ -15,7 +22,6 @@ def unzip_file(source, dest):
 
 def get_file(url, f_name):
     with open(f_name, 'wb') as f:
-        print 'Downloading %s' % f_name
         response = requests.get(url, stream=True)
         total_length = response.headers.get('content-length')
 
@@ -33,23 +39,23 @@ def get_file(url, f_name):
                     print '%d%% Downloaded!' % done
                     previous = done
 
-if not os.path.exists('../../data'):
-    os.mkdir('../../data')
+if not os.path.exists(data_base):
+    os.mkdir(data_base)
                 
-if not os.path.exists('./ff1010_audio'):
-    os.mkdir('../../data/ff1010_audio')
+if not os.path.exists(data_base + 'ff1010_audio/'):
+    os.mkdir(data_base + 'ff1010_audio/')
 
-if not os.path.exists('./warblr_audio'):
-    os.mkdir('../../data/warblr_audio')
+if not os.path.exists(data_base + 'warblr_audio/'):
+    os.mkdir(data_base + 'warblr_audio/')
 
-print 'Downloading freefield labels'
-get_file(freefield1010_labels, '../../data/ff1010bird_metadata.csv')
-print 'Downloading freefield audio'
-get_file(freefield1010_audio, '../../data/ff1010_audio.zip')
-print 'Downloading warblr labels'
-get_file(warblr_labels, '../../data/warblr_labels.csv')
-print 'Downloading warblr audio'
-get_file(warblr_audio, '../../data/warblr_audio.zip')
+for key in datasets:
+    print('Downloading %s labels' % key)
+    get_file(label_base + datasets[key]['labels'], 
+             data_base + '%s_labels.csv' % key)
 
-unzip_file('../../data/ff1010_audio.zip', '../../data/ff1010_audio')
-unzip_file('../../data/warblr_audio.zip', '../../data/warblr_audio')
+    print('Downloading %s audio' % key)
+    get_file(audio_base + datasets[key]['audio'], 
+             data_base + '%s_audio.zip' % key)
+
+    print('Unzipping %s audio' % key)
+    unzip_file(data_base + '%s_audio.zip' % key, data_base + '%s_audio/' % key)
