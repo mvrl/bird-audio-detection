@@ -47,7 +47,7 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, network='v3'):
+def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, network='v2.1'):
 
     print('Using network ' + network + '.')
     return networks[network](net, 
