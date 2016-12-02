@@ -9,7 +9,7 @@ import ops
 
 d = 400000 # number of audio samples for learning
 
-basedir = os.path.expanduser('~/data/birddetection/wav/')
+basedir = os.path.expanduser('../data/')
 
 def read_and_decode(recname,is_training=True):
 
