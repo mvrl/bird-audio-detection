@@ -9,8 +9,8 @@ import util
 slim = tf.contrib.slim
 
 print('Setting up run')
-nc = util.parse_arguments()
-run_name = util.run_name(nc)
+nc, dc = util.parse_arguments()
+run_name = util.run_name(nc,dc)
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -34,7 +34,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records()
+    feat, label, recname = dataset.records(**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
