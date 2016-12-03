@@ -15,7 +15,7 @@ run_name = util.run_name(nc,dc)
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
-flags.DEFINE_string('summary_dir', 'logs/train/' + run_name, 'output directory for training summaries')
+flags.DEFINE_string('summary_dir', 'logs/' + run_name, 'output directory for training summaries')
 flags.DEFINE_float('gamma',0.5,'learning rate change per step')
 flags.DEFINE_float('learning_rate',0.03,'learning rate change per step')
 
