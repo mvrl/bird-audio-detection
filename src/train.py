@@ -15,7 +15,7 @@ run_name = util.run_name(nc,dc)
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
-flags.DEFINE_string('summary_dir', 'logs/' + run_name + '/','output directory for training summaries')
+flags.DEFINE_string('summary_dir', 'logs/' + run_name, 'output directory for training summaries')
 flags.DEFINE_float('gamma',0.5,'learning rate change per step')
 flags.DEFINE_float('learning_rate',0.03,'learning rate change per step')
 
@@ -67,12 +67,24 @@ with tf.variable_scope('Train'):
 
     acc = tf.contrib.metrics.accuracy(prediction,label)
 
+with tf.variable_scope('Summaries'):
+    print('Defining summaries')
+
+    tf.scalar_summary('loss', loss)
+    tf.scalar_summary('learning_rate', learning_rate)
+    tf.scalar_summary('accuracy', acc)
+
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 
 with tf.Session(config=config) as sess:
 
     update_ops = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS))
+
+    summary_writer = tf.train.SummaryWriter(FLAGS.summary_dir, 
+                                            sess.graph,
+                                            flush_secs=5)
+    summary = tf.merge_all_summaries()
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
@@ -90,15 +102,19 @@ with tf.Session(config=config) as sess:
     print('Starting training')
     while _i < 30000:
 
-        _,_,_i,_loss,_acc = sess.run([
+        _,_,_i,_loss,_acc, _summary = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
-            acc
+            acc,
+            summary
             ])
 
         print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
+
+        summary_writer.add_summary(_summary, _i)
+        summary_writer.flush()
 
 	if _i % 100 == 0:
 	    print("saving total checkpoint")
