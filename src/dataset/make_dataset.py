@@ -1,30 +1,30 @@
 from sklearn.model_selection import train_test_split
 
 DATA_BASE = '../../data/'
+datasets = [ 'freefield1010', 'warblr' ]
+test_size = 0.1
+random_state = 0
 
-# Assuming labels are downloaded at DATA_BASE location
-with open(DATA_BASE + 'freefield1010_labels.csv', 'r') as fb:
-    ff1010_lines = fb.readlines()
+def split_dataset(dataset_name):
+    f_lines = []
+    with open(DATA_BASE + dataset_name + '_labels.csv', 'r') as fb:
+        for line in fb:
+            f_lines.append(dataset_name + '_audio/wav/' + line)
 
-with open(DATA_BASE + 'warblr_labels.csv', 'r') as fb:
-    warblr_lines = fb.readlines()
+    # Assuming csv file has header, so we ignore first line of f_lines
+    train_split, test_split, _, _ = train_test_split(f_lines[1:],
+                                                range(0, len(f_lines)-1),
+                                                test_size=test_size,
+                                                random_state=random_state)
 
-ff1010_train, ff1010_test, _, _ = train_test_split(ff1010_lines[1:],
-                                               range(0, len(ff1010_lines)-1),
-                                               test_size = 0.1,
-                                               random_state=0)
-
-warblr_train, warblr_test, _, _ = train_test_split(warblr_lines[1:],
-                                               range(0, len(warblr_lines)-1),
-                                               test_size = 0.1,
-                                               random_state=0)
-
-def write_csv(data, f_name):
-    with open(f_name, 'w') as fb:
-        for line in data:
+    with open(dataset_name + '_train.csv', 'w') as fb:
+        for line in train_split:
             fb.write(line)
 
-write_csv(ff1010_train, './ff1010_train.csv')
-write_csv(ff1010_test, './ff1010_test.csv')
-write_csv(warblr_train, './warblr_train.csv')
-write_csv(warblr_test, './warblr_test.csv')
+    with open(dataset_name + '_test.csv', 'w') as fb:
+        for line in test_split:
+            fb.write(line)
+
+# Assuming labels are downloaded at DATA_BASE location
+for dataset_name in datasets:
+    split_dataset(dataset_name)
