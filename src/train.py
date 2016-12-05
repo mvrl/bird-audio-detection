@@ -73,6 +73,7 @@ with tf.variable_scope('Summaries'):
     tf.scalar_summary('loss', loss)
     tf.scalar_summary('learning_rate', learning_rate)
     tf.scalar_summary('accuracy', acc)
+    # tf.audio_summary('audio', feat, 44100.0)
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -102,7 +103,7 @@ with tf.Session(config=config) as sess:
     print('Starting training')
     while _i < 30000:
 
-        _,_,_i,_loss,_acc, _summary = sess.run([
+        _,_,_i,_loss,_acc,_summary = sess.run([
             train_op,
             update_ops,
             global_step,
