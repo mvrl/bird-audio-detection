@@ -60,9 +60,9 @@ def read_and_decode(recname,is_training=True):
 def records(is_training=True,batch_size=64,exclude_positive=False,augment_with_negatives=False):
 
     if is_training:
-        names = glob.glob('./dataset/*0[0-8]')
+        names = glob.glob('./dataset/*_train.csv')
     else:
-        names = glob.glob('./dataset/*09')
+        names = glob.glob('./dataset/*_test.csv')
 
     if not names:
         raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.sh')
