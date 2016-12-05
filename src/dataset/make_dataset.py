@@ -4,6 +4,7 @@ DATA_BASE = '../../data/'
 datasets = [ 'freefield1010', 'warblr' ]
 test_size = 0.1
 random_state = 0
+num_folds = 10
 
 def split_dataset(dataset_name):
     f_lines = []
@@ -17,11 +18,15 @@ def split_dataset(dataset_name):
                                                 test_size=test_size,
                                                 random_state=random_state)
 
-    with open(dataset_name + '_train.csv', 'w') as fb:
-        for line in train_split:
-            fb.write(line)
+    counter = 0
+    chunk_size = len(train_split) / (num_folds-1)
+    for i in range(0, len(train_split), chunk_size):
+        with open(dataset_name + '_0%d.csv' % counter, 'w') as fb:
+            for line in train_split[i : i+chunk_size]:
+                fb.write(line)
+        counter += 1
 
-    with open(dataset_name + '_test.csv', 'w') as fb:
+    with open(dataset_name + '_09.csv', 'w') as fb:
         for line in test_split:
             fb.write(line)
 
