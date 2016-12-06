@@ -27,7 +27,7 @@ the correct setting for `TF_BINARY_URL` from the tensorflow website, then run
 
 ## Prepare the datasets:
 
-1. You have to have "scikit-learn" library installed. If not, install by typing `conda install scikit-learn` and follow instructions
+1. You have to have `scikit-learn` library installed. If not, install by typing `conda install scikit-learn` and follow instructions
 1. `cd ./src/dataset`
 1. `python download_and_extract.py` : note this might take a while
 1. `python make_dataset.py` : splits dataset into 10 folds
