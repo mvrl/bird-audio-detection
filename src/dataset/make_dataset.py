@@ -1,4 +1,4 @@
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 
 DATA_BASE = '../../data/'
 datasets = [ 'freefield1010', 'warblr' ]
@@ -12,23 +12,13 @@ def split_dataset(dataset_name):
         for line in fb:
             f_lines.append(dataset_name + '_audio/wav/' + line)
 
-    # Assuming csv file has header, so we ignore first line of f_lines
-    train_split, test_split, _, _ = train_test_split(f_lines[1:],
-                                                range(0, len(f_lines)-1),
-                                                test_size=test_size,
-                                                random_state=random_state)
-
+    kf = KFold(n_splits=num_folds, shuffle=True, random_state=random_state)
     counter = 0
-    chunk_size = len(train_split) / (num_folds-1)
-    for i in range(0, len(train_split), chunk_size):
-        with open(dataset_name + '_0%d.csv' % counter, 'w') as fb:
-            for line in train_split[i : i+chunk_size]:
-                fb.write(line)
+    for _, fold_index in kf.split(f_lines):
+        with open(dataset_name + '_%02d.csv' % counter, 'w') as fb:
+            for index in fold_index:
+                fb.write(f_lines[index])
         counter += 1
-
-    with open(dataset_name + '_09.csv', 'w') as fb:
-        for line in test_split:
-            fb.write(line)
 
 # Assuming labels are downloaded at DATA_BASE location
 for dataset_name in datasets:
