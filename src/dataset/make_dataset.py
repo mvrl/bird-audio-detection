@@ -9,6 +9,7 @@ num_folds = 10
 def split_dataset(dataset_name):
     f_lines = []
     with open(DATA_BASE + dataset_name + '_labels.csv', 'r') as fb:
+        fb.readline()
         for line in fb:
             f_lines.append(dataset_name + '_audio/wav/' + line)
 
