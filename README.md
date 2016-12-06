@@ -27,9 +27,11 @@ the correct setting for `TF_BINARY_URL` from the tensorflow website, then run
 
 ## Prepare the datasets:
 
-1. Download the training datasets from the [project website](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
-1. Unpack the datasets (TODO: currently this goes in ~/data/birddetection, but we should probably put them in a standard place in the repo root, such as ./data/)
-1. (currently not necessary) Create training/testing splits (TODO: write a script to make training and testing splits)
+1. You have to have "scikit-learn" library installed. If not, install by typing `conda install scikit-learn` and follow instructions
+1. `cd ./src/dataset`
+1. `python download_and_extract.py` : note this might take a while
+1. `python make_dataset.py` : splits dataset into 10 folds
+1. Datasets will be downloaded to `../../data/` while the folds will be written to the current dataset directory
 
 ## Run the training script:
 
