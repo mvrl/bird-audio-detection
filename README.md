@@ -59,5 +59,6 @@ see what would be a useful contribution. Then, you can either:
 
 # Team
 
-- Lead: Nathan Jacobs (jacobs@cs.uky.edu)
+- [Nathan Jacobs](https://github.com/jacobsn) (team lead)
+- [Weilian "William" Song](https://github.com/weiliansong)
 
