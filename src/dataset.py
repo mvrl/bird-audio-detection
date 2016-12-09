@@ -9,10 +9,9 @@ import ops
 
 d = 400000 # number of audio samples for learning
 
-basedir = os.path.expanduser('../data/')
+basedir = '../data/'
 
-def read_and_decode(recname,is_training=True):
-
+def read_and_decode(recname):
 
     def read_wav(f):
         try:
@@ -57,7 +56,18 @@ def read_and_decode(recname,is_training=True):
 
     return y
 
-def records(is_training=True,batch_size=64,exclude_positive=False,augment_with_negatives=False):
+def _loader(names):
+
+    fq = tf.train.string_input_producer(names)
+    reader = tf.TextLineReader()
+    key, value = reader.read(fq)
+    defaults = [['missing'],[0]]
+    recname, label = tf.decode_csv(value,record_defaults=defaults)
+    feat = read_and_decode(recname)
+
+    return feat, label, recname 
+
+def _get_names(is_training):
 
     if is_training:
         names = glob.glob('./dataset/*0[0-8].csv')
@@ -67,70 +77,99 @@ def records(is_training=True,batch_size=64,exclude_positive=False,augment_with_n
     if not names:
         raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.py')
 
-    tensors = []
-    for f in names:
+    return names
 
-        fq = tf.train.string_input_producer(names)
-        reader = tf.TextLineReader()
-        key, value = reader.read(fq)
-        defaults = [['missing'],[0]]
-        recname, label = tf.decode_csv(value,record_defaults=defaults)
+def _augment(tensors,batch_size=16):
 
-        feat = read_and_decode(recname,is_training=is_training)
+    # same audio files, two different shuffles, add together to form
+    # new audio files
 
-        #
-        # filter by label (if requested)
-        #
+    feat1, label1, recname1 = tf.train.shuffle_batch_join(
+            tensors, batch_size=batch_size,
+            capacity=1000, min_after_dequeue=400,
+            enqueue_many=True)
 
-        # add batch dimension to support filtering by label
-        feat = tf.expand_dims(feat,0)
-        recname = tf.expand_dims(recname,0)
-        recname = tf.expand_dims(recname,0)
-        tmp = label
-        label = tf.expand_dims(label,0)
+    feat2, label2, recname2 = tf.train.shuffle_batch_join(
+            tensors, batch_size=batch_size,
+            capacity=1000, min_after_dequeue=400,
+            enqueue_many=True)
 
-        if exclude_positive:
+    r = tf.random_uniform((batch_size,1))
 
-            feat = feat[0:(1-tmp),:]
-            recname = recname[0:(1-tmp),:]
-            label = label[0:(1-tmp)]
+    feat = r*feat1 + (1-r)*feat2
 
-        tensors.append((feat, label, recname))
+    # update the label, should not be needed because both labels
+    # should be the same
+    label = tf.minimum(1,label1 + label2) # element-wise or
 
-    if is_training:
+    recname = recname1 + '|' + recname2
 
-        feat, label, recname = tf.train.shuffle_batch_join(tensors, batch_size=batch_size,
-                    capacity=1000, min_after_dequeue=400,
-                    enqueue_many=True)
+    return feat, label, recname
 
-        if augment_with_negatives:
+def records(is_training=True,batch_size=64,augment_add=False):
 
-            # idea: add in a negative example to decrease the signal
-            # to noise ratio, but also reduce overfitting and help
-            # generalization
+    if not is_training and augment_add:
+        raise Exception("You can't augment testing data.")
 
-            # load training examples, but filter out positive examples
-            # if we don't do this, then we get way to many positives
-            # after we combine them below 
-            feat_noise,label_noise,recname_noise = records(
-                    is_training=is_training,
-                    augment_with_negatives=False,
-                    batch_size=batch_size,
-                    exclude_positive=True) # only use non bird audio as noise 
+    names = _get_names(is_training)
 
-            # combine the two audio files
-            # MAYBE it might help to randomize this a bit
-            feat = .9*feat + .1*feat_noise
+    if not augment_add:
 
-            # update the label, currently not needed because we
-            # label_noise should always be negative
-            label = tf.minimum(1,label + label_noise) # element-wise or
+        tensors = []
+        for f in names:
+            tensors.append(_loader(names))
 
-            recname = recname + '|' + recname_noise 
-
-        return feat, label, recname
-
+        if is_training:
+            # randomly shuffle the examples
+            feat, label, recname = tf.train.shuffle_batch_join(
+                    tensors, batch_size=batch_size, capacity=1000,
+                    min_after_dequeue=400)
+        else:
+            # no need to shuffle test data
+            feat, label, recname = tf.train.batch_join(
+                    tensors, batch_size=batch_size)
     else:
-        return tf.train.batch_join(tensors, batch_size=batch_size,
-                enqueue_many=True)
+
+        # this is a special version of training that does data
+        # augmentation by adding two audio files together
+
+        tensors_neg = []
+        tensors_pos = []
+
+        for f in names:
+
+            # randomly shuffle, and randomly add together sounds to
+            # make new sounds.  Idea here is to only add positives to
+            # positives and negatives to negatives
+
+            feat, label, recname = _loader(names)
+
+            # add batch dimension to support filtering by label
+            feat = tf.expand_dims(feat,0)
+            recname = tf.expand_dims(recname,0)
+            recname = tf.expand_dims(recname,0)
+            tmp = label
+            label = tf.expand_dims(label,0)
+
+            # only negatives
+            feat_neg = feat[0:(1-tmp),:]
+            recname_neg = recname[0:(1-tmp),:]
+            label_neg = label[0:(1-tmp)]
+
+            # only positives
+            feat_pos = feat[0:(tmp),:]
+            recname_pos = recname[0:(tmp),:]
+            label_pos = label[0:(tmp)]
+
+            tensors_neg.append((feat_neg, label_neg, recname_neg))
+            tensors_pos.append((feat_pos, label_pos, recname_pos))
+
+        pos = _augment(tensors_pos)
+        neg = _augment(tensors_neg)
+
+        feat, label, recname = tf.train.shuffle_batch_join((pos,neg),
+                batch_size=batch_size, capacity=1000,
+                min_after_dequeue=400, enqueue_many=True)
+
+    return feat, label, recname
 
