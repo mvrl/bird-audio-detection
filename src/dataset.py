@@ -108,9 +108,6 @@ def _augment(tensors,batch_size=16):
 
 def records(is_training=True,batch_size=64,augment_add=False):
 
-    if not is_training and augment_add:
-        raise Exception("You can't augment testing data.")
-
     names = _get_names(is_training)
 
     if not augment_add:
