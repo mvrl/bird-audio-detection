@@ -53,7 +53,6 @@ with tf.variable_scope('Loss'):
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
     loss_class = 10*tf.reduce_mean(loss_class)
-    #loss_class = tf.reduce_mean(loss_class)
 
     loss = loss_class + reg 
 
@@ -61,7 +60,7 @@ with tf.variable_scope('Train'):
     print('Defining training methods')
 
     global_step = tf.Variable(0,name='global_step',trainable=False)
-    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,1000,FLAGS.gamma,staircase=True)
+    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,4000,FLAGS.gamma,staircase=True)
     optimizer = tf.train.AdamOptimizer(learning_rate,epsilon=.1)
     train_op = optimizer.minimize(loss,global_step=global_step)
 
@@ -70,6 +69,8 @@ with tf.variable_scope('Train'):
 with tf.variable_scope('Summaries'):
     print('Defining summaries')
 
+    tf.scalar_summary('loss_class', loss_class)
+    tf.scalar_summary('loss_reg', reg)
     tf.scalar_summary('loss', loss)
     tf.scalar_summary('learning_rate', learning_rate)
     tf.scalar_summary('accuracy', acc)
