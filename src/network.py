@@ -131,9 +131,9 @@ def network_v2_3(net, is_training=True, activation_fn=tf.nn.relu,
         net = tf.reduce_max(net,[2],keep_dims=True)
 
         # combine window features
-        net = slim.conv2d(net,np.rint(capacity*32),[9,1],stride=(2,1))
-        net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(2,1))
-        net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity2*32),[9,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity2*64),[9,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity2*128),[9,1],stride=(2,1))
         net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
 
         net = slim.flatten(tf.reduce_max(net,[1]))
