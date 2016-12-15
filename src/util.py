@@ -30,7 +30,7 @@ def parse_arguments():
 
     # specify dataset configuration
     dc = {}
-    dc['augment_with_negatives'] = opts.AUG 
+    dc['augment_add'] = opts.AUG 
 
     return nc, dc
 
@@ -42,7 +42,7 @@ def run_name(nc,dc):
 
     run_name += '_{:0.2f}'.format(nc['capacity'])
 
-    run_name += '_yes' if dc['augment_with_negatives'] else '_no'
+    run_name += '_yes' if dc['augment_add'] else '_no'
 
     return run_name
 
