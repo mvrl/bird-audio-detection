@@ -47,7 +47,7 @@ def network_arg_scope(
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
                 return sc
 
-def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, network='v2.1'):
+def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, capacity2=1.0, network='v2.1'):
 
     print('Using network ' + network + '.')
     return networks[network](net, 
@@ -102,6 +102,38 @@ def network_v3(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         # combine window features
         net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(1,1))
         net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(1,1))
+        net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(tf.reduce_max(net,[1]))
+
+        net = tf.squeeze(net)
+
+        return net 
+
+def network_v2_3(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    Nb = net.get_shape()[0]
+
+    net = tf.reshape(net,(-1,2000,200))
+    net = tf.expand_dims(net,-1)
+    # add a log
+    net = tf.concat(3,(net,tf.log(net+1+1e-6)))
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        # extract window features
+        net = slim.conv2d(net,np.rint(capacity*8),[1,5],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*16),[1,5],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*32),[1,3],stride=(1,1))
+
+        net = tf.reduce_max(net,[2],keep_dims=True)
+
+        # combine window features
+        net = slim.conv2d(net,np.rint(capacity*32),[9,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(2,1))
         net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
 
         net = slim.flatten(tf.reduce_max(net,[1]))
@@ -228,6 +260,7 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 networks = {
         'v4':network_v4,
         'v3':network_v3,
+        'v2.3':network_v2_3,
         'v2.2':network_v2_2,
         'v2.1':network_v2_1,
         'v2':network_v2,
