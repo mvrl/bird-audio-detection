@@ -1,7 +1,7 @@
 from sklearn.model_selection import KFold
 
 DATA_BASE = '../../data/'
-datasets = [ 'freefield1010', 'warblr' ]
+datasets = [ 'freefield1010', 'warblr', 'badchallenge' ]
 test_size = 0.1
 random_state = 0
 num_folds = 10
@@ -11,6 +11,9 @@ def split_dataset(dataset_name):
     with open(DATA_BASE + dataset_name + '_labels.csv', 'r') as fb:
         fb.readline()
         for line in fb:
+            # Account for test set, which we need a dummy label
+            if line.split(',')[1] == '\n':
+                line = line[:-1] + '-1\n'
             f_lines.append(dataset_name + '_audio/wav/' + line)
 
     kf = KFold(n_splits=num_folds, shuffle=True, random_state=random_state)
