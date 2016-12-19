@@ -67,9 +67,9 @@ def read_and_decode(recname):
 
     return y
 
-def _loader(names):
+def _loader(name):
 
-    fq = tf.train.string_input_producer(names)
+    fq = tf.train.string_input_producer([name])
     reader = tf.TextLineReader()
     key, value = reader.read(fq)
     defaults = [['missing'],[0]]
@@ -81,16 +81,17 @@ def _loader(names):
 def _get_names(is_training):
 
     if is_training:
-        names = glob.glob('./dataset/*0[0-8].csv')
+        print("ONLY FF")
+        names = glob.glob('./dataset/f*0[0-8].csv')
     else:
-        names = glob.glob('./dataset/*09.csv')
+        names = glob.glob('./dataset/f*09.csv')
 
     if not names:
         raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.py')
 
     return names
 
-def _augment(tensors,batch_size=16):
+def _augment(tensors,augment_add=False,batch_size=1):
 
     # same audio files, two different shuffles, add together to form
     # new audio files
@@ -100,84 +101,64 @@ def _augment(tensors,batch_size=16):
             capacity=1000, min_after_dequeue=400,
             enqueue_many=True)
 
-    feat2, label2, recname2 = tf.train.shuffle_batch_join(
-            tensors, batch_size=batch_size,
-            capacity=1000, min_after_dequeue=400,
-            enqueue_many=True)
+    if not augment_add:
+        print("Without additive augmentation")
 
-    r = tf.random_uniform((batch_size,1))
+        return feat1, label1, recname1
 
-    feat = r*feat1 + (1-r)*feat2
+    else:
+        print("With additive augmentation")
 
-    # update the label, should not be needed because both labels
-    # should be the same
-    label = tf.minimum(1,label1 + label2) # element-wise or
+        feat2, label2, recname2 = tf.train.shuffle_batch_join(
+                tensors, batch_size=batch_size,
+                capacity=1000, min_after_dequeue=400,
+                enqueue_many=True)
 
-    recname = recname1 + '|' + recname2
+        r = tf.random_uniform((batch_size,1))
 
-    return feat, label, recname
+        feat = r*feat1 + (1-r)*feat2
+
+        # update the label, should not be needed because both labels
+        # should be the same
+        label = tf.minimum(1,label1 + label2) # element-wise or
+
+        recname = recname1 + '|' + recname2
+
+        return feat, label, recname
 
 def records(is_training=True,batch_size=64,augment_add=False):
 
     names = _get_names(is_training)
 
-    if not augment_add:
+    if not is_training:
+
+        print("Loading records in TESTING mode")
 
         tensors = []
         for f in names:
-            tensors.append(_loader(names))
+            tensors.append(_loader(f))
 
-        if is_training:
-            # randomly shuffle the examples
-            feat, label, recname = tf.train.shuffle_batch_join(
-                    tensors, batch_size=batch_size, capacity=1000,
-                    min_after_dequeue=400)
-        else:
-            # no need to shuffle test data
-            feat, label, recname = tf.train.batch_join(
-                    tensors, batch_size=batch_size)
+        # no need to shuffle test data
+        feat, label, recname = tf.train.batch_join(
+                tensors, batch_size=batch_size)
+
     else:
 
-        # this is a special version of training that does data
-        # augmentation by adding two audio files together
+        print("Loading records in TRAINING mode")
 
-        tensors_neg = []
-        tensors_pos = []
-
+        tensors = []
         for f in names:
+            tensors.append(_loader(f))
 
-            # randomly shuffle, and randomly add together sounds to
-            # make new sounds.  Idea here is to only add positives to
-            # positives and negatives to negatives
+        feat, label, recname = tf.train.shuffle_batch_join(tensors,
+                batch_size=1, capacity=1000,
+                min_after_dequeue=400)
 
-            feat, label, recname = _loader(names)
-
-            # add batch dimension to support filtering by label
-            feat = tf.expand_dims(feat,0)
-            recname = tf.expand_dims(recname,0)
-            recname = tf.expand_dims(recname,0)
-            tmp = label
-            label = tf.expand_dims(label,0)
-
-            # only negatives
-            feat_neg = feat[0:(1-tmp),:]
-            recname_neg = recname[0:(1-tmp),:]
-            label_neg = label[0:(1-tmp)]
-
-            # only positives
-            feat_pos = feat[0:(tmp),:]
-            recname_pos = recname[0:(tmp),:]
-            label_pos = label[0:(tmp)]
-
-            tensors_neg.append((feat_neg, label_neg, recname_neg))
-            tensors_pos.append((feat_pos, label_pos, recname_pos))
-
-        pos = _augment(tensors_pos)
-        neg = _augment(tensors_neg)
-
-        feat, label, recname = tf.train.shuffle_batch_join((pos,neg),
-                batch_size=batch_size, capacity=1000,
-                min_after_dequeue=400, enqueue_many=True)
+        (feat,recname),label = tf.contrib.training.stratified_sample(
+            [feat,recname],label,[.5,.5],
+            batch_size,
+            queue_capacity=300,
+            enqueue_many=True) 
 
     return feat, label, recname
 
