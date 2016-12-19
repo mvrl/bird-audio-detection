@@ -18,7 +18,18 @@ def read_and_decode(recname):
             fid = wave.open(basedir+f+'.wav', "rb")
             raw = fid.readframes(fid.getnframes())
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
+
+            # pad if necessary 
+            amount_short = 441000-y.size
+            if 0 < amount_short:
+                y = np.pad(y, 
+                        (0,amount_short),
+                        'wrap') 
+
             y = y / 32768.
+            #y = y / np.sqrt(1e-8 + np.mean(y**2))
+            #y = y / 100.
+
             return y
         except Exception,e:
             print(e)
