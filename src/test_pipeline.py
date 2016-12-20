@@ -1,23 +1,25 @@
 import tensorflow as tf
 import dataset
 
-feat, label, recname = dataset.records(batch_size=20)
+feat, label, recname = dataset.records_challenge()
 
 with tf.Session() as sess:
 
-    sess.run(tf.initialize_all_variables())
+    sess.run(tf.global_variables_initializer())
+    
+    # This is necessary for initializing num_epoch local variable
+    sess.run(tf.local_variables_initializer())
 
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
     try:
-        for ix in xrange(100):
+        while(True):
             _feat,_label,_recname = sess.run([feat,label,recname])
 
-            print(_label)
-            print(_label.mean())
-            #print(_recname)
-    finally:
+            print(len(_label))
+
+    except tf.errors.OutOfRangeError:
+        print('Queue empty, exiting now...')
         coord.request_stop()
         coord.join(threads)
-
