@@ -78,13 +78,12 @@ def _loader(name):
 
     return feat, label, recname 
 
-def _get_names(is_training):
+def _get_names(dataset_name, is_training):
 
     if is_training:
-        print("ONLY FF")
-        names = glob.glob('./dataset/f*0[0-8].csv')
+        names = glob.glob('./dataset/%s*0[0-8].csv' % dataset_name)
     else:
-        names = glob.glob('./dataset/f*09.csv')
+        names = glob.glob('./dataset/%s*09.csv' % dataset_name)
 
     if not names:
         raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.py')
@@ -102,12 +101,10 @@ def _augment(tensors,augment_add=False,batch_size=1):
             enqueue_many=True)
 
     if not augment_add:
-        print("Without additive augmentation")
 
         return feat1, label1, recname1
 
     else:
-        print("With additive augmentation")
 
         feat2, label2, recname2 = tf.train.shuffle_batch_join(
                 tensors, batch_size=batch_size,
@@ -126,13 +123,29 @@ def _augment(tensors,augment_add=False,batch_size=1):
 
         return feat, label, recname
 
-def records(is_training=True,batch_size=64,augment_add=False):
+def stratRecords(dataset_names=[''],is_training=True,
+                 batch_size=64,augment_add=False):
+    _records = []
 
-    names = _get_names(is_training)
+    for dataset_name in dataset_names:
+        _records.append(records(dataset_name=dataset_name,
+                                is_training=is_training,
+                                batch_size=batch_size,
+                                augment_add=augment_add))
+
+    feat, label, recname = tf.train.shuffle_batch_join( 
+                                            _records,
+                                            batch_size=batch_size,
+                                            capacity=1000,
+                                            min_after_dequeue=400,
+                                            enqueue_many=True)
+    return feat, label, recname
+
+def records(dataset_name,is_training=True,batch_size=64,augment_add=False):
+
+    names = _get_names(dataset_name, is_training)
 
     if not is_training:
-
-        print("Loading records in TESTING mode")
 
         tensors = []
         for f in names:
@@ -143,8 +156,6 @@ def records(is_training=True,batch_size=64,augment_add=False):
                 tensors, batch_size=batch_size)
 
     else:
-
-        print("Loading records in TRAINING mode")
 
         tensors = []
         for f in names:
@@ -161,4 +172,3 @@ def records(is_training=True,batch_size=64,augment_add=False):
             enqueue_many=True) 
 
     return feat, label, recname
-
