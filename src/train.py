@@ -36,7 +36,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.stratRecords(dataset_names=dataset_names, **dc)
+    feat, label, recname = dataset.records(dataset_names=dataset_names, **dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')

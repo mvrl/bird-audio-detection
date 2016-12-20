@@ -90,7 +90,7 @@ def _get_names(dataset_name, is_training):
 
     return names
 
-def _augment(tensors,augment_add=False,batch_size=1):
+def _augment(tensors,augment_add=False,batch_size=16):
 
     # same audio files, two different shuffles, add together to form
     # new audio files
@@ -123,15 +123,14 @@ def _augment(tensors,augment_add=False,batch_size=1):
 
         return feat, label, recname
 
-def stratRecords(dataset_names=[''],is_training=True,
-                 batch_size=64,augment_add=False):
+def records(dataset_names=[''],is_training=True,batch_size=64,augment_add=False):
     _records = []
 
     for dataset_name in dataset_names:
-        _records.append(records(dataset_name=dataset_name,
-                                is_training=is_training,
-                                batch_size=batch_size,
-                                augment_add=augment_add))
+        _records.append(individualRecords(dataset_name=dataset_name,
+                                          is_training=is_training,
+                                          batch_size=batch_size,
+                                          augment_add=augment_add))
 
     feat, label, recname = tf.train.shuffle_batch_join( 
                                             _records,
@@ -141,7 +140,8 @@ def stratRecords(dataset_names=[''],is_training=True,
                                             enqueue_many=True)
     return feat, label, recname
 
-def records(dataset_name,is_training=True,batch_size=64,augment_add=False):
+def individualRecords(dataset_name,is_training=True,
+                      batch_size=64,augment_add=False):
 
     names = _get_names(dataset_name, is_training)
 
