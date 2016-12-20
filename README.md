@@ -5,6 +5,11 @@ website](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge
 or the [paper that summarizes the
 challenge](https://arxiv.org/abs/1608.03417).
 
+# Important Links
+
+- Slack channel: [#bird-audio](https://ukyvision.slack.com/messages/bird-audio/details/) [signup](https://ukyvision.slack.com/signup) (automatic with g.uky.edu or uky.edu address)
+- [Bird Audio Detection Challenge](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
+
 # Getting Started
 
 This should be enough to get you training and evaluating code running:
@@ -61,4 +66,5 @@ see what would be a useful contribution. Then, you can either:
 
 - [Nathan Jacobs](https://github.com/jacobsn) (team lead)
 - [Weilian "William" Song](https://github.com/weiliansong)
+
 
