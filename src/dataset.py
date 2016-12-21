@@ -35,37 +35,11 @@ def read_and_decode(recname):
             print(e)
 
     y = tf.py_func(read_wav, [recname], [tf.float32])
-
-    # warblr dataset has variable length audio files
-    # pad then crop as a lazy solution
-
     y = tf.reshape(y,(-1,1,1))
-
-    def fixshort(y):
-        # too long, so pad to correct length
-
-        y = ops.resize_image_with_crop_or_pad(y,d,1)
-        y = tf.reshape(y,(d,1,1))
-        return y
-
-    def fixlong(y):
-        # too long, so take a random crop
-
-        # could add the following to force it to be a random crop from
-        # near the beginning of the file
-
-        #y = ops.resize_image_with_crop_or_pad(y,441000,1)
-        y = tf.random_crop(y,(d,1,1)) 
-        return y
-
-    y = tf.cond(
-            tf.size(y) <= d,
-            lambda: fixshort(y),
-            lambda: fixlong(y))
-
+    y = tf.random_crop(y,(d,1,1)) 
     y = tf.squeeze(y)
 
-    return y
+    return y 
 
 def _load_csv(name, num_epochs=None):
 
@@ -232,7 +206,7 @@ def stratifyRecords(dataset_name='', what_to_grab='train', is_training=True,
         queue_capacity=100,
         enqueue_many=True) 
 
-    feat = tf.pack([read_and_decode(x) for x in tf.unstack(recname)])
+    feat = tf.stack([read_and_decode(x) for x in tf.unstack(recname)])
 
     if augment_add:
         feat,label,recname = _augment((feat,label,recname))

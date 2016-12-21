@@ -3,10 +3,10 @@ import dataset
 from datetime import datetime
 
 
-
 #feat, label, recname = dataset.records_challenge()
-feat, label, recname = dataset.records_train_fold()
-#feat, label, recname = dataset.records_test_fold()
+#feat, label, recname = dataset.records_train_fold()
+#feat, label, recname = dataset.records_test_fold(dataset_names=["free"])
+feat, label, recname = dataset.records_test_fold()
 
 with tf.Session() as sess:
 
@@ -25,7 +25,10 @@ with tf.Session() as sess:
             tend = datetime.now()
             print(tend-tstart)
 
-            print(len(_label))
+            print(_recname)
+            print(_label)
+            print("Number of entries: %i"%len(_label))
+            print("Average label: %f"%_label.mean())
 
     except tf.errors.OutOfRangeError:
         print('Queue empty, exiting now...')
