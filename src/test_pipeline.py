@@ -21,5 +21,6 @@ with tf.Session() as sess:
 
     except tf.errors.OutOfRangeError:
         print('Queue empty, exiting now...')
+    finally:
         coord.request_stop()
         coord.join(threads)
