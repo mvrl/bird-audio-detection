@@ -223,12 +223,13 @@ def stratifyRecords(dataset_name='', what_to_grab='train', is_training=True,
     for f in names:
         tensors.append(_load_csv(f, num_epochs=None))
 
-    label, recname = tf.train.batch_join(tensors, batch_size=batch_size)
+    label, recname = tf.train.batch_join(tensors, batch_size=1)
 
     (recname,), label = tf.contrib.training.stratified_sample(
         [recname],label,[.5,.5],
         batch_size=batch_size,
-        queue_capacity=300,
+        threads_per_queue=10,
+        queue_capacity=100,
         enqueue_many=True) 
 
     feat = tf.pack([read_and_decode(x) for x in tf.unstack(recname)])

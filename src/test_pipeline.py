@@ -1,7 +1,12 @@
 import tensorflow as tf
 import dataset
+from datetime import datetime
 
-feat, label, recname = dataset.records_challenge()
+
+
+#feat, label, recname = dataset.records_challenge()
+feat, label, recname = dataset.records_train_fold()
+#feat, label, recname = dataset.records_test_fold()
 
 with tf.Session() as sess:
 
@@ -15,7 +20,10 @@ with tf.Session() as sess:
 
     try:
         while(True):
+            tstart = datetime.now()
             _feat,_label,_recname = sess.run([feat,label,recname])
+            tend = datetime.now()
+            print(tend-tstart)
 
             print(len(_label))
 
