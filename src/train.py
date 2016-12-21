@@ -19,6 +19,8 @@ flags.DEFINE_string('summary_dir', 'logs/' + run_name, 'output directory for tra
 flags.DEFINE_float('gamma',0.5,'learning rate change per step')
 flags.DEFINE_float('learning_rate',0.03,'learning rate change per step')
 
+dataset_names = ['freefield1010', 'warblr']
+
 if not tf.gfile.Exists(FLAGS.checkpoint_dir):
     print('Making checkpoint dir')
     os.makedirs(FLAGS.checkpoint_dir)
@@ -34,7 +36,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records(**dc)
+    feat, label, recname = dataset.records_train_fold(**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -69,11 +71,11 @@ with tf.variable_scope('Train'):
 with tf.variable_scope('Summaries'):
     print('Defining summaries')
 
-    tf.scalar_summary('loss_class', loss_class)
-    tf.scalar_summary('loss_reg', reg)
-    tf.scalar_summary('loss', loss)
-    tf.scalar_summary('learning_rate', learning_rate)
-    tf.scalar_summary('accuracy', acc)
+    tf.summary.scalar('loss_class', loss_class)
+    tf.summary.scalar('loss_reg', reg)
+    tf.summary.scalar('loss', loss)
+    tf.summary.scalar('learning_rate', learning_rate)
+    tf.summary.scalar('accuracy', acc)
     # tf.audio_summary('audio', feat, 44100.0)
 
 config = tf.ConfigProto()
@@ -83,14 +85,14 @@ with tf.Session(config=config) as sess:
 
     update_ops = tf.group(*tf.get_collection(tf.GraphKeys.UPDATE_OPS))
 
-    summary_writer = tf.train.SummaryWriter(FLAGS.summary_dir, 
-                                            sess.graph,
-                                            flush_secs=5)
-    summary = tf.merge_all_summaries()
+    summary_writer = tf.summary.FileWriter(FLAGS.summary_dir, 
+                                           sess.graph,
+                                           flush_secs=5)
+    summary = tf.summary.merge_all()
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-    sess.run(tf.initialize_all_variables())
+    sess.run(tf.global_variables_initializer())
 
     saver = tf.train.Saver()
 
