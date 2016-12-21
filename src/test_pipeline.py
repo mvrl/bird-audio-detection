@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 tensor_list = {
+        'challenge_add':dataset.records_challenge(augment_add=True), 
         'challenge':dataset.records_challenge(), 
         'train_fold':dataset.records_train_fold(),
         'test_fold_free':dataset.records_test_fold(dataset_names=["free"]),

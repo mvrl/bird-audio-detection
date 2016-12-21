@@ -106,7 +106,7 @@ def _augment(tensors,batch_size=16):
     return feat, label, recname
 
 def _records(dataset_names=[''], what_to_grab='train', is_training=True, 
-                    batch_size=64, augment_add=False, num_epochs=None):
+        batch_size=64, augment_add=False, num_epochs=None):
 
     # Grab all desired folds
     names = []
@@ -136,18 +136,22 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
 
 
 # Load all of badchallenge files
-def records_challenge(dataset_names=['badchallenge'], is_training=False, 
-                      batch_size=64):
+def records_challenge(dataset_names=['badchallenge'], 
+        is_training=False, batch_size=64, augment_add=False):
+
+    if augment_add:
+        print('Ignoring augmentation in test mode')
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='all',
                                 num_epochs=1,
+                                augment_add=False,
                                 is_training=is_training,
                                 batch_size=batch_size)
 
 # Load all of ff and warblr, 0-8 only
 def records_train_fold(dataset_names=['freefield1010', 'warblr'], 
-                       is_training=True, batch_size=64, augment_add=False):
+        is_training=True, batch_size=64, augment_add=False):
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='train',
@@ -157,17 +161,21 @@ def records_train_fold(dataset_names=['freefield1010', 'warblr'],
 
 # Load all of ff and warblr, 9 only
 def records_test_fold(dataset_names=['freefield1010', 'warblr'], 
-                      is_training=False, batch_size=64):
+        is_training=False, batch_size=64, augment_add=False):
+
+    if augment_add:
+        print('Ignoring augmentation add in test mode')
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='test',
                                 num_epochs=1,
+                                augment_add=False,
                                 is_training=is_training,
                                 batch_size=batch_size)
 
 # Load all of ff and warblr, 0-9
 def records_train_all(dataset_names=['freefield1010', 'warblr'], 
-                      is_training=True, batch_size=64, augment_add=False):
+        is_training=True, batch_size=64, augment_add=False):
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='all',

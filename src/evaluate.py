@@ -22,10 +22,6 @@ slim = tf.contrib.slim
 nc,dc = util.parse_arguments()
 run_name = util.run_name(nc,dc)
 
-if 'augment_add' in dc:
-    print('Ignoring -A flag in test mode.')
-    del dc['augment_add']
-
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
