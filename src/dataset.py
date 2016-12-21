@@ -106,7 +106,7 @@ def _augment(tensors,batch_size=16):
     return feat, label, recname
 
 def _records(dataset_names=[''], what_to_grab='train', is_training=True, 
-                    batch_size=64, augment_add=False):
+                    batch_size=64, augment_add=False, num_epochs=None):
 
     # Grab all desired folds
     names = []
@@ -115,7 +115,7 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
     
     tensors_list = []
     for f in names:
-        tensors = _load_tensors(f)
+        tensors = _load_tensors(f,num_epochs=num_epochs)
         if augment_add:
             tensors = _augment(tensors)
         tensors_list.append(tensors)
@@ -141,6 +141,7 @@ def records_challenge(dataset_names=['badchallenge'], is_training=False,
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='all',
+                                num_epochs=1,
                                 is_training=is_training,
                                 batch_size=batch_size)
 
@@ -160,6 +161,7 @@ def records_test_fold(dataset_names=['freefield1010', 'warblr'],
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='test',
+                                num_epochs=1,
                                 is_training=is_training,
                                 batch_size=batch_size)
 

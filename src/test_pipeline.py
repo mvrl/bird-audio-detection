@@ -3,35 +3,40 @@ import dataset
 from datetime import datetime
 
 
-#feat, label, recname = dataset.records_challenge()
-#feat, label, recname = dataset.records_train_fold()
-#feat, label, recname = dataset.records_test_fold(dataset_names=["free"])
-feat, label, recname = dataset.records_test_fold()
+tensor_list = {
+        'challenge':dataset.records_challenge(), 
+        'train_fold':dataset.records_train_fold(),
+        'test_fold_free':dataset.records_test_fold(dataset_names=["free"]),
+        'test_fold':dataset.records_test_fold()}
 
-with tf.Session() as sess:
+for name,(feat, label, recname) in tensor_list.items(): 
+    print("======================================")
+    print(name)
 
-    sess.run(tf.global_variables_initializer())
-    
-    # This is necessary for initializing num_epoch local variable
-    sess.run(tf.local_variables_initializer())
+    with tf.Session() as sess:
 
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
+        sess.run(tf.global_variables_initializer())
+        
+        # This is necessary for initializing num_epoch local variable
+        sess.run(tf.local_variables_initializer())
 
-    try:
-        while(True):
-            tstart = datetime.now()
-            _feat,_label,_recname = sess.run([feat,label,recname])
-            tend = datetime.now()
-            print(tend-tstart)
+        coord = tf.train.Coordinator()
+        threads = tf.train.start_queue_runners(coord=coord)
 
-            print(_recname)
-            print(_label)
-            print("Number of entries: %i"%len(_label))
-            print("Average label: %f"%_label.mean())
+        try:
+            for ix in range(10):
+                tstart = datetime.now()
+                _feat,_label,_recname = sess.run([feat,label,recname])
+                tend = datetime.now()
+                print(tend-tstart)
 
-    except tf.errors.OutOfRangeError:
-        print('Queue empty, exiting now...')
-    finally:
-        coord.request_stop()
-        coord.join(threads)
+                print(_recname[0:10])
+                print(_label[0:10])
+                print("Number of entries: %i"%len(_label))
+                print("Average label: %f"%_label.mean())
+
+        except tf.errors.OutOfRangeError:
+            print('Queue empty, exiting now...')
+        finally:
+            coord.request_stop()
+            coord.join(threads)
