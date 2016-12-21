@@ -67,7 +67,7 @@ def read_and_decode(recname):
 
     return y
 
-def _load_csv(name, num_epochs):
+def _load_csv(name, num_epochs=None):
 
     fq = tf.train.string_input_producer([name], num_epochs=num_epochs)
     reader = tf.TextLineReader()
@@ -134,22 +134,10 @@ def _augment(tensors,augment_add=False,batch_size=16):
 # Load all of badchallenge files
 def records_challenge(dataset_names=['badchallenge'], is_training=False, 
                       batch_size=64, augment_add=False):
-    _records = []
 
-    for dataset_name in dataset_names:
-        _records.append(stratifyRecords(dataset_name=dataset_name,
-                                        what_to_grab='all',
-                                        is_training=is_training,
-                                        batch_size=batch_size,
-                                        augment_add=augment_add))
-
-    feat, label, recname = tf.train.shuffle_batch_join(
-                                            _records,
-                                            batch_size=batch_size,
-                                            capacity=1000,
-                                            min_after_dequeue=400,
-                                            enqueue_many=True,
-                                            allow_smaller_final_batch=True)
+    feat, label, recname = testRecords(dataset_names=dataset_names,
+                                       what_to_grab='all',
+                                       batch_size=batch_size)
 
     return feat, label, recname
 
@@ -176,23 +164,12 @@ def records_train_fold(dataset_names=['freefield1010', 'warblr'],
 
 # Load all of ff and warblr, 9 only
 def records_test_fold(dataset_names=['freefield1010', 'warblr'], 
-                      is_training=False, batch_size=64, augment_add=False):
-    _records = []
+                      is_training=False, batch_size=64):
 
-    for dataset_name in dataset_names:
-        _records.append(stratifyRecords(dataset_name=dataset_name,
-                                        what_to_grab='test',
-                                        is_training=is_training,
-                                        batch_size=batch_size,
-                                        augment_add=augment_add))
+    feat, label, recname = testRecords(dataset_names=dataset_names,
+                                       what_to_grab='test',
+                                       batch_size=batch_size)
 
-    feat, label, recname = tf.train.shuffle_batch_join(
-                                            _records,
-                                            batch_size=batch_size,
-                                            capacity=1000,
-                                            min_after_dequeue=400,
-                                            enqueue_many=True,
-                                            allow_smaller_final_batch=True)
     return feat, label, recname
 
 # Load all of ff and warblr, 0-9
@@ -215,37 +192,44 @@ def records_train_all(dataset_names=['freefield1010', 'warblr'],
                                             enqueue_many=True)
     return feat, label, recname
 
-def stratifyRecords(dataset_name, what_to_grab='train', is_training=True, 
+def testRecords(dataset_names=[''], what_to_grab='test', 
+                is_training=False, batch_size=64):
+
+    names = []
+    # Grab all desired folds
+    for dataset_name in dataset_names:
+        names.extend(_get_names(dataset_name, what_to_grab=what_to_grab))
+
+    tensors = []
+    for f in names:
+        label, recname = _load_csv(f, num_epochs=1)
+        feat = read_and_decode(recname)
+        tensors.append((feat, label, recname))
+    
+    # no need to shuffle test data
+    feat, label, recname = tf.train.batch_join(tensors, 
+                                         batch_size=batch_size,
+                                         allow_smaller_final_batch=True)
+    return feat, label, recname
+
+
+def stratifyRecords(dataset_name='', what_to_grab='train', is_training=True, 
                     batch_size=64, augment_add=False):
+
     names = _get_names(dataset_name, what_to_grab=what_to_grab)
     
-    if not is_training:
+    tensors = []
+    for f in names:
+        tensors.append(_load_csv(f, num_epochs=None))
 
-        tensors = []
-        for f in names:
-            label, recname = _load_csv(f, num_epochs=1)
-            feat = read_and_decode(recname)
-            tensors.append((feat, label, recname))
-        
-        # no need to shuffle test data
-        feat, label, recname = tf.train.batch_join(tensors, 
-                                             batch_size=batch_size,
-                                             allow_smaller_final_batch=True)
+    label, recname = tf.train.batch_join(tensors, batch_size=batch_size)
 
-    else:
+    (recname,), label = tf.contrib.training.stratified_sample(
+        [recname],label,[.5,.5],
+        batch_size=batch_size,
+        queue_capacity=300,
+        enqueue_many=True) 
 
-        tensors = []
-        for f in names:
-            tensors.append(_load_csv(f, num_epochs=None))
-
-        label, recname = tf.train.batch_join(tensors, batch_size=batch_size)
-
-        (recname,), label = tf.contrib.training.stratified_sample(
-            [recname],label,[.5,.5],
-            batch_size=batch_size,
-            queue_capacity=300,
-            enqueue_many=True) 
-
-        feat = tf.pack([read_and_decode(x) for x in tf.unstack(recname)])
+    feat = tf.pack([read_and_decode(x) for x in tf.unstack(recname)])
 
     return feat, label, recname
