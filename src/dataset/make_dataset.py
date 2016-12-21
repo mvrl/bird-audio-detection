@@ -4,7 +4,7 @@ from sklearn.model_selection import KFold
 from sklearn.utils import resample
 import numpy as np
 import itertools
-from random import shuffle
+import random 
 from collections import defaultdict
 
 DATA_BASE = '../../data/'
@@ -13,7 +13,7 @@ datasets_challenge = ['badchallenge' ]
 random_state = 0
 num_folds = 10
 
-def split_dataset(dataset_name, balance=False):
+def split_dataset(dataset_name, balance=False, shuffle=True):
 
     print('Spliting %s.' % dataset_name)
 
@@ -31,7 +31,7 @@ def split_dataset(dataset_name, balance=False):
 
 
     print('Splitting into folds')
-    kf = KFold(n_splits=num_folds, shuffle=True, random_state=random_state)
+    kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=random_state)
 
     for counter, (_, fold_index) in enumerate(kf.split(names)):
 
@@ -56,7 +56,8 @@ def split_dataset(dataset_name, balance=False):
                 samples['1'].extend(tmp)
 
         items = list(itertools.chain(*samples.values()))
-        shuffle(items)
+        if shuffle:
+            random.shuffle(items)
 
         # output items
         with open(fold_filename, 'w') as fid:
@@ -65,8 +66,8 @@ def split_dataset(dataset_name, balance=False):
 
 # Assuming labels are downloaded at DATA_BASE location
 for dataset_name in datasets_train:
-    split_dataset(dataset_name, balance=True)
+    split_dataset(dataset_name, balance=True, shuffle=True)
 
 for dataset_name in datasets_challenge:
-    split_dataset(dataset_name, balance=False)
+    split_dataset(dataset_name, balance=False, shuffle=False)
 
