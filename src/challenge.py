@@ -1,3 +1,8 @@
+#
+# Purpose: this file generates predictions for us to submit to the
+# bird audio detection challenge server.
+#
+
 from __future__ import division, print_function, absolute_import
 
 import os

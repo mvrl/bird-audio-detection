@@ -1,3 +1,8 @@
+#
+# Purpose: this file generates predictions for us to use internally
+# to evaluate different learning methods on the training data.
+#
+
 from __future__ import division, print_function, absolute_import
 
 import os
@@ -6,25 +11,26 @@ import tensorflow as tf
 import numpy as np
 import dataset
 import network
+import itertools
 import util
 slim = tf.contrib.slim
 
 #
-#
+# parse inputs
 #
 
 nc,dc = util.parse_arguments()
 run_name = util.run_name(nc,dc)
+
+if 'augment_add' in dc:
+    print('Ignoring -A flag in test mode.')
+    del dc['augment_add']
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
 
 out_file = FLAGS.checkpoint_dir + 'output.csv'
-
-if os.path.isfile(out_file):
-    print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
-    sys.exit(0) 
 
 #
 # Define graph 
@@ -47,13 +53,16 @@ with tf.variable_scope('Predictor'):
     auc, auc_up = tf.contrib.metrics.streaming_auc(probs[:,1],label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(2,tf.int64),dtype=tf.int64)
 
+#
+# Setup runtime and process 
+#
+
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
+
+    sess.run(tf.initialize_local_variables())
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-
-    sess.run(tf.initialize_all_variables())
-    sess.run(tf.initialize_local_variables())
 
     saver = tf.train.Saver()
 
@@ -69,12 +78,10 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
         try:
 
-            while(True):
+            for i in itertools.count(0):
 
                 _conf,_acc,_auc,_,_,_prob,_label,_recname = \
                 sess.run([conf,acc,auc,acc_up,auc_up,probs,label,recname])
-
-                #_fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
 
                 np.savetxt(output,
                         np.concatenate((_label.reshape((-1,1)),_prob),axis=1),
@@ -91,8 +98,9 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                 #        print(v.name)
                 #        print(v.outputs.get_shape().as_list()[1:])
 
-                if ix % 10 == 0:
-                    print(_conf_accum)# / np.sum(_conf_accum))
+                if i % 10 == 0:
+                    print(_conf_accum)
+
         except tf.errors.OutOfRangeError:
             print('Queue empty, exiting now...')
         finally:
