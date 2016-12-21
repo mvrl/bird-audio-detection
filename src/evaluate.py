@@ -33,7 +33,7 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records(is_training=False,batch_size=100,**dc)
+    feat, label, recname = dataset.records_test_fold(**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -67,31 +67,35 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     with open(out_file,'w') as output:
 
-        for ix in xrange(16):
+        try:
 
-            _conf,_acc,_auc,_,_,_prob,_label,_recname = \
-               sess.run([conf,acc,auc,acc_up,auc_up,probs,label,recname])
+            while(True):
 
-            #_fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
+                _conf,_acc,_auc,_,_,_prob,_label,_recname = \
+                sess.run([conf,acc,auc,acc_up,auc_up,probs,label,recname])
 
-            np.savetxt(output,
-                    np.concatenate((_label.reshape((-1,1)),_prob),axis=1),
-                    fmt='%u %1.8f %1.8f') 
+                #_fileid = np.array([int(f[2:]) for f in _fileid]).reshape([-1,1])
 
-            print('Accuracy = {0:.3f} AUC = {1:.3f}'.format(_acc,_auc))
-            _conf_accum += _conf
+                np.savetxt(output,
+                        np.concatenate((_label.reshape((-1,1)),_prob),axis=1),
+                        fmt='%u %1.8f %1.8f') 
 
-            # dump activations 
-            #if ix == 0:
-            #    print('Activations')
-            #    mv = tf.get_collection(tf.GraphKeys.ACTIVATIONS)
-            #    for v in mv:
-            #        print(v.name)
-            #        print(v.outputs.get_shape().as_list()[1:])
+                print('Accuracy = {0:.3f} AUC = {1:.3f}'.format(_acc,_auc))
+                _conf_accum += _conf
 
-            if ix % 10 == 0:
-                print(_conf_accum)# / np.sum(_conf_accum))
+                # dump activations 
+                #if ix == 0:
+                #    print('Activations')
+                #    mv = tf.get_collection(tf.GraphKeys.ACTIVATIONS)
+                #    for v in mv:
+                #        print(v.name)
+                #        print(v.outputs.get_shape().as_list()[1:])
 
-    coord.request_stop()
-    coord.join(threads)
+                if ix % 10 == 0:
+                    print(_conf_accum)# / np.sum(_conf_accum))
+        except tf.errors.OutOfRangeError:
+            print('Queue empty, exiting now...')
+        finally:
+            coord.request_stop()
+            coord.join(threads)
 

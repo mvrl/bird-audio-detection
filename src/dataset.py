@@ -98,7 +98,14 @@ def _get_names(dataset_name, what_to_grab='train'):
 
     return names
 
-def _augment(tensors,augment_add=False,batch_size=16):
+def _augment(tensors,batch_size=16):
+
+    raise(Exception('augmentation is not working right now.'))
+    # SUGGESTION: we used to have code to isolate positives and
+    # negatives then we would use the code below to merge only
+    # positives and negatives.  probably a better strategy is to just
+    # get another stream of negatives and randomly add it in to all
+    # the examples
 
     # same audio files, two different shuffles, add together to form
     # new audio files
@@ -108,28 +115,22 @@ def _augment(tensors,augment_add=False,batch_size=16):
             capacity=1000, min_after_dequeue=400,
             enqueue_many=True)
 
-    if not augment_add:
+    feat2, label2, recname2 = tf.train.shuffle_batch_join(
+            tensors, batch_size=batch_size,
+            capacity=1000, min_after_dequeue=400,
+            enqueue_many=True)
 
-        return feat1, label1, recname1
+    r = tf.random_uniform((batch_size,1))
 
-    else:
+    feat = r*feat1 + (1-r)*feat2
 
-        feat2, label2, recname2 = tf.train.shuffle_batch_join(
-                tensors, batch_size=batch_size,
-                capacity=1000, min_after_dequeue=400,
-                enqueue_many=True)
+    # update the label, should not be needed because both labels
+    # should be the same
+    label = tf.minimum(1,label1 + label2) # element-wise or
 
-        r = tf.random_uniform((batch_size,1))
+    recname = recname1 + '|' + recname2
 
-        feat = r*feat1 + (1-r)*feat2
-
-        # update the label, should not be needed because both labels
-        # should be the same
-        label = tf.minimum(1,label1 + label2) # element-wise or
-
-        recname = recname1 + '|' + recname2
-
-        return feat, label, recname
+    return feat, label, recname
 
 # Load all of badchallenge files
 def records_challenge(dataset_names=['badchallenge'], is_training=False, 
@@ -231,5 +232,8 @@ def stratifyRecords(dataset_name='', what_to_grab='train', is_training=True,
         enqueue_many=True) 
 
     feat = tf.pack([read_and_decode(x) for x in tf.unstack(recname)])
+
+    if augment_add:
+        feat,label,recname = _augment((feat,label,recname))
 
     return feat, label, recname
