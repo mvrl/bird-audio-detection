@@ -51,7 +51,7 @@ axis square
 grid on
 legend_text = cellfun(...
   @(name,eval) sprintf('%s (%02.4f)',name,eval.AUC), ...
-  runs, eval_all(idx)','UniformOutput', false);
+  runs(idx), eval_all(idx)','UniformOutput', false);
 legend(legend_text,'Interpreter','none','Location','southeast')
 set(gca,'XTick', linspace(0,1,5))
 set(gca,'YTick', linspace(0,1,5))
