@@ -25,6 +25,7 @@ run_name = util.run_name(nc,dc)
 
 checkpoint_dir = 'checkpoint/' + run_name + '/'
 out_file = checkpoint_dir + 'output.csv'
+summary_dir = 'logs/' + run_name
 
 if os.path.isfile(out_file):
     print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
@@ -54,6 +55,15 @@ with tf.variable_scope('Predictor'):
     auc, auc_up = tf.contrib.metrics.streaming_auc(probs[:,1],label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(2,tf.int64),dtype=tf.int64)
 
+with tf.variable_scope('Train'):
+    global_step = tf.Variable(0,name='global_step',trainable=False)
+
+with tf.variable_scope('Summaries'):
+    print('Defining summaries')
+
+    tf.summary.scalar('Accuracy_test',  acc)
+    tf.summary.scalar('AUC_test',  auc)
+
 #
 # Setup runtime and process 
 #
@@ -61,6 +71,11 @@ with tf.variable_scope('Predictor'):
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     sess.run(tf.initialize_local_variables())
+
+    summary_writer = tf.summary.FileWriter(summary_dir, 
+                                           sess.graph,
+                                           flush_secs=5)
+    summary = tf.summary.merge_all()
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
@@ -102,10 +117,15 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                     print(_conf_accum)
 
     except tf.errors.OutOfRangeError:
-        print('Queue empty, exiting now...')
+
+        print('Queue empty, writing AUC to log...')
 
         with open(out_file_auc,'w') as fid_auc:
             print('AUC = {1:.3f}',file=fid_auc)
+
+        _summary,_i = sess.run([summary,global_step])
+        summary_writer.add_summary(_summary, _i)
+        summary_writer.flush()
 
     finally:
         coord.request_stop()
