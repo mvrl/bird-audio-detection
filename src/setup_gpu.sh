@@ -4,5 +4,8 @@ LD_LIBRARY_PATH+=:$ANACONDA_HOME/lib
 
 export LD_LIBRARY_PATH
 
+TF_CPP_MIN_LOG_LEVEL=2
+export TF_CPP_MIN_LOG_LEVEL
+
 source activate tensorflow_gpu
 
