@@ -2,10 +2,13 @@ import os
 import wave
 import dataset
 import network
+import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 from scipy.ndimage.filters import gaussian_filter
+from scipy.signal import spectrogram
+from scipy.cluster.hierarchy import dendrogram, linkage
 
 slim = tf.contrib.slim
 
@@ -27,6 +30,12 @@ with tf.variable_scope('Predictor'):
     probs = tf.nn.softmax(logits)
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
+if not os.path.exists('./conv5'):
+    os.mkdir('./conv5')
+
+if not os.path.exists('./conv6'):
+    os.mkdir('./conv6')
+
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     sess.run(tf.local_variables_initializer())
     sess.run(tf.global_variables_initializer())
@@ -45,7 +54,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                                                              recname, 
                                                              prediction, 
                                                              end_points])
-
     for idx in range(20):
         sample = output['conv6'][idx]
 
@@ -61,17 +69,23 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         plt.axis((0, sample.shape[0], -25.0, 25.0))
 
         plt.subplot(313)
-        plt.plot(_feat[idx])
+        plt.specgram(_feat[idx])
 
         plt.savefig('./conv6/test_%d.png' % idx)
         plt.clf()
 
-    for idx in range(20):
         sample = output['conv5'][idx]
 
         sample = sample.reshape((sample.shape[0], 26)).T
         sample = imresize(sample, (26,150))
         sample = gaussian_filter(sample, 1)
+
+        # Sort sample by column 45
+        # sample = [ sample[idx] for idx in np.argsort(sample[:,45]) ]
+
+        # Sort sample by mean of each row
+        mean = [ np.mean(x) for x in sample ]
+        sample = [ sample[idx] for idx in np.argsort(mean) ]
 
         plt.figure(1)
         plt.subplot(211)
@@ -80,8 +94,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         plt.title('%s %d %d' % (_recname[idx], _label[idx], _prediction[idx]))
 
         plt.subplot(212)
-        plt.plot(_feat[idx])
-        plt.axis((0, _feat[idx].size, -1.0, 1.0))
+        plt.specgram(_feat[idx])
 
         plt.savefig('./conv5/test_%d.png' % idx)
         plt.clf()
