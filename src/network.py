@@ -8,7 +8,8 @@ def network_arg_scope(
         weight_decay=0.00004,
         is_training=True,
         batch_norm_var_collection='moving_vars',
-        activation_fn=tf.nn.relu):
+        activation_fn=tf.nn.relu,
+        keep_prob=.8):
     ''' Sets default parameters for network layers.'''
 
     batch_norm_params = {
@@ -45,7 +46,11 @@ def network_arg_scope(
             stride=(2,1),
             outputs_collections=tf.GraphKeys.ACTIVATIONS):
             with slim.arg_scope([slim.batch_norm], is_training=is_training) as sc:
-                return sc
+                with slim.arg_scope(
+                        [slim.dropout], 
+                        is_training=is_training, keep_prob=keep_prob) as sc:
+
+                    return sc
 
 def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, capacity2=1.0, network='v2.1'):
 
@@ -109,6 +114,43 @@ def network_v3(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         net = tf.squeeze(net)
 
         return net 
+
+def network_v2_4(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    Nb = net.get_shape()[0]
+
+    net = tf.reshape(net,(-1,2000,200))
+    net = tf.expand_dims(net,-1)
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        # extract window features
+        net = slim.conv2d(net,np.rint(capacity*8),[1,9],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*16),[1,9],stride=(1,2))
+        net = slim.conv2d(net,np.rint(capacity*32),[1,9],stride=(1,2))
+        print(net)
+
+        net = tf.reduce_max(net,[2],keep_dims=True)
+
+        # combine window features
+        net = slim.conv2d(net,np.rint(capacity2*32),[9,1],stride=(2,1))
+        net = slim.dropout(net)
+        net = slim.conv2d(net,np.rint(capacity2*64),[9,1],stride=(2,1))
+        net = slim.dropout(net)
+        net = slim.conv2d(net,np.rint(capacity2*128),[9,1],stride=(2,1))
+        net = slim.dropout(net)
+        net = slim.conv2d(net,np.rint(capacity2*256),[9,1],stride=(2,1))
+        net = slim.dropout(net)
+        net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(tf.reduce_max(net,[1]))
+
+        net = tf.squeeze(net)
+
+        return net 
+
 
 def network_v2_3(net, is_training=True, activation_fn=tf.nn.relu,
         capacity=1.0, capacity2=1.0):
@@ -260,6 +302,7 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 networks = {
         'v4':network_v4,
         'v3':network_v3,
+        'v2.4':network_v2_4,
         'v2.3':network_v2_3,
         'v2.2':network_v2_2,
         'v2.1':network_v2_1,
