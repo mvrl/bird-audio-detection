@@ -30,6 +30,9 @@ if os.path.isfile(out_file):
     print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
     sys.exit(0) 
 
+out_file = FLAGS.checkpoint_dir + 'output.csv'
+out_file_auc = FLAGS.checkpoint_dir + 'AUC.csv'
+
 #
 # Define graph 
 #
@@ -100,6 +103,10 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     except tf.errors.OutOfRangeError:
         print('Queue empty, exiting now...')
+
+        with open(out_file_auc,'w') as fid_auc:
+            print('AUC = {1:.3f}',file=fid_auc)
+
     finally:
         coord.request_stop()
         coord.join(threads)
