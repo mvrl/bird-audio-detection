@@ -13,20 +13,22 @@ import dataset
 import network
 import itertools
 import util
+
 slim = tf.contrib.slim
 
 #
-# parse inputs
+# parse inputs 
 #
 
 nc,dc = util.parse_arguments()
 run_name = util.run_name(nc,dc)
 
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
+checkpoint_dir = 'checkpoint/' + run_name + '/'
+out_file = checkpoint_dir + 'output.csv'
 
-out_file = FLAGS.checkpoint_dir + 'output.csv'
+if os.path.isfile(out_file):
+    print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
+    sys.exit(0) 
 
 #
 # Define graph 
@@ -62,7 +64,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     saver = tf.train.Saver()
 
-    ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
@@ -70,9 +72,8 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     print('Starting evaluation')
     _conf_accum = np.zeros((2,2), dtype=np.int64)
 
-    with open(out_file,'w') as output:
-
-        try:
+    try:
+        with open(out_file,'w') as output:
 
             for i in itertools.count(0):
 
@@ -97,9 +98,9 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                 if i % 10 == 0:
                     print(_conf_accum)
 
-        except tf.errors.OutOfRangeError:
-            print('Queue empty, exiting now...')
-        finally:
-            coord.request_stop()
-            coord.join(threads)
+    except tf.errors.OutOfRangeError:
+        print('Queue empty, exiting now...')
+    finally:
+        coord.request_stop()
+        coord.join(threads)
 

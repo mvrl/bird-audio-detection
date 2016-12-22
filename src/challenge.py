@@ -21,11 +21,12 @@ slim = tf.contrib.slim
 nc,dc = util.parse_arguments()
 run_name = util.run_name(nc,dc)
 
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
+checkpoint_dir = 'checkpoint/' + run_name + '/'
+out_file = checkpoint_dir + 'submission.csv'
 
-out_file = FLAGS.checkpoint_dir + 'submission.csv'
+if os.path.isfile(out_file):
+    print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
+    sys.exit(0) 
 
 #
 # Define graph 
@@ -53,7 +54,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     saver = tf.train.Saver()
 
-    ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
