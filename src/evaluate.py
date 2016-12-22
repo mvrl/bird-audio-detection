@@ -31,8 +31,8 @@ if os.path.isfile(out_file):
     print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
     sys.exit(0) 
 
-out_file = FLAGS.checkpoint_dir + 'output.csv'
-out_file_auc = FLAGS.checkpoint_dir + 'AUC.csv'
+out_file = checkpoint_dir + 'output.csv'
+out_file_auc = checkpoint_dir + 'AUC.csv'
 
 #
 # Define graph 
