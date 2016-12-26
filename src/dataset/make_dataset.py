@@ -1,29 +1,73 @@
+from __future__ import division, print_function, absolute_import
+
 from sklearn.model_selection import KFold
+from sklearn.utils import resample
+import numpy as np
+import itertools
+import random 
+from collections import defaultdict
 
 DATA_BASE = '../../data/'
-datasets = [ 'freefield1010', 'warblr', 'badchallenge' ]
-test_size = 0.1
+datasets_train = [ 'freefield1010', 'warblr']
+datasets_challenge = ['badchallenge' ]
 random_state = 0
 num_folds = 10
 
-def split_dataset(dataset_name):
-    f_lines = []
+def split_dataset(dataset_name, balance=False, shuffle=True):
+
+    print('Spliting %s.' % dataset_name)
+
+    names = []
+    labels = []
     with open(DATA_BASE + dataset_name + '_labels.csv', 'r') as fb:
         fb.readline()
         for line in fb:
-            # Account for test set, which we need a dummy label
-            if line.split(',')[1] == '\n':
-                line = line[:-1] + '-1\n'
-            f_lines.append(dataset_name + '_audio/wav/' + line)
+            name, label = line.split(',')
+            label = label.strip()
+            if label == '':
+                label = '-1'
+            names.append(dataset_name + '_audio/wav/' + name)
+            labels.append(label)
 
-    kf = KFold(n_splits=num_folds, shuffle=True, random_state=random_state)
-    counter = 0
-    for _, fold_index in kf.split(f_lines):
-        with open(dataset_name + '_%02d.csv' % counter, 'w') as fb:
-            for index in fold_index:
-                fb.write(f_lines[index])
-        counter += 1
+
+    print('Splitting into folds')
+    kf = KFold(n_splits=num_folds, shuffle=shuffle, random_state=random_state)
+
+    for counter, (_, fold_index) in enumerate(kf.split(names)):
+
+        samples = defaultdict(list) 
+
+        # split into different classes
+        for index in fold_index:
+            samples[labels[index]].append((names[index],labels[index]))
+
+        fold_filename = dataset_name + '_%02d.csv' % counter
+        print('Exporting %s' % fold_filename)
+
+        if balance:
+            print('Balancing each fold')
+            n_pos = len(samples['1'])
+            n_neg = len(samples['0'])
+            if n_neg < n_pos:
+                tmp = resample(samples['0'],n_samples=n_pos-n_neg)
+                samples['0'].extend(tmp)
+            elif n_pos < n_neg:
+                tmp = resample(samples['1'],n_samples=n_neg-n_pos)
+                samples['1'].extend(tmp)
+
+        items = list(itertools.chain(*samples.values()))
+        if shuffle:
+            random.shuffle(items)
+
+        # output items
+        with open(fold_filename, 'w') as fid:
+            for item in items:
+                print("%s,%s" % item, file=fid)
 
 # Assuming labels are downloaded at DATA_BASE location
-for dataset_name in datasets:
-    split_dataset(dataset_name)
+for dataset_name in datasets_train:
+    split_dataset(dataset_name, balance=True, shuffle=True)
+
+for dataset_name in datasets_challenge:
+    split_dataset(dataset_name, balance=False, shuffle=False)
+

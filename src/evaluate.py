@@ -13,24 +13,26 @@ import dataset
 import network
 import itertools
 import util
+
 slim = tf.contrib.slim
 
 #
-# parse inputs
+# parse inputs 
 #
 
 nc,dc = util.parse_arguments()
 run_name = util.run_name(nc,dc)
 
-if 'augment_add' in dc:
-    print('Ignoring -A flag in test mode.')
-    del dc['augment_add']
+checkpoint_dir = 'checkpoint/' + run_name + '/'
+out_file = checkpoint_dir + 'output.csv'
+summary_dir = 'logs/' + run_name
 
-flags = tf.app.flags
-FLAGS = flags.FLAGS
-flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
+if os.path.isfile(out_file):
+    print('Skipping ({:s}): output file ({:s}) already exists'.format(run_name, out_file))
+    sys.exit(0) 
 
-out_file = FLAGS.checkpoint_dir + 'output.csv'
+out_file = checkpoint_dir + 'output.csv'
+out_file_auc = checkpoint_dir + 'AUC.csv'
 
 #
 # Define graph 
@@ -53,6 +55,15 @@ with tf.variable_scope('Predictor'):
     auc, auc_up = tf.contrib.metrics.streaming_auc(probs[:,1],label)
     conf = tf.contrib.metrics.confusion_matrix(prediction,label,num_classes=tf.cast(2,tf.int64),dtype=tf.int64)
 
+with tf.variable_scope('Train'):
+    global_step = tf.Variable(0,name='global_step',trainable=False)
+
+with tf.variable_scope('Summaries'):
+    print('Defining summaries')
+
+    tf.summary.scalar('Accuracy_test',  acc)
+    tf.summary.scalar('AUC_test',  auc)
+
 #
 # Setup runtime and process 
 #
@@ -60,13 +71,18 @@ with tf.variable_scope('Predictor'):
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     sess.run(tf.initialize_local_variables())
+
+    summary_writer = tf.summary.FileWriter(summary_dir, 
+                                           sess.graph,
+                                           flush_secs=5)
+    summary = tf.summary.merge_all()
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
     saver = tf.train.Saver()
 
-    ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
@@ -74,9 +90,8 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     print('Starting evaluation')
     _conf_accum = np.zeros((2,2), dtype=np.int64)
 
-    with open(out_file,'w') as output:
-
-        try:
+    try:
+        with open(out_file,'w') as output:
 
             for i in itertools.count(0):
 
@@ -101,9 +116,18 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
                 if i % 10 == 0:
                     print(_conf_accum)
 
-        except tf.errors.OutOfRangeError:
-            print('Queue empty, exiting now...')
-        finally:
-            coord.request_stop()
-            coord.join(threads)
+    except tf.errors.OutOfRangeError:
+
+        print('Queue empty, writing AUC to log...')
+
+        with open(out_file_auc,'w') as fid_auc:
+            print('AUC = {1:.3f}',file=fid_auc)
+
+        _summary,_i = sess.run([summary,global_step])
+        summary_writer.add_summary(_summary, _i)
+        summary_writer.flush()
+
+    finally:
+        coord.request_stop()
+        coord.join(threads)
 

@@ -1,19 +1,132 @@
--n v2 -a elu -c 1
--n v2 -a lrelu -c 1
--n v2 -a relu -c 1
+-n v2.1 -a elu -c 0.1 
+-n v2.1 -a elu -c 0.10 -b 1.00 
+-n v2.1 -a elu -c 0.2 
+-n v2.1 -a elu -c 0.20 -b 1.00 
+-n v2.1 -a elu -c 0.20 -b 1.00 -A
+-n v2.1 -a elu -c 0.3
+-n v2.1 -a elu -c 0.30 -b 1.00 
+-n v2.1 -a elu -c 0.30 -b 1.00 -A
+-n v2.1 -a elu -c 0.35 1.00 
+-n v2.1 -a elu -c 0.4 
+-n v2.1 -a elu -c 0.40 -b 1.00 
+-n v2.1 -a elu -c 0.40 -b 1.00 -A
+-n v2.1 -a elu -c 0.45 1.00 
+-n v2.1 -a elu -c 0.5 
+-n v2.1 -a elu -c 0.50 -b 1.00 
+-n v2.1 -a elu -c 0.50 -b 1.00 -A
+-n v2.1 -a elu -c 0.6 
+-n v2.1 -a elu -c 0.60 -b 1.00 
+-n v2.1 -a elu -c 0.60 -b 1.00 -A
+-n v2.1 -a elu -c 0.70 -b 1.00 
 -n v2.1 -a elu -c 0.8
+-n v2.1 -a elu -c 0.8 
+-n v2.1 -a elu -c 0.80 -b 1.00 
+-n v2.1 -a elu -c 0.80 -b 1.00 -A
 -n v2.1 -a elu -c 0.8 -A
 -n v2.1 -a elu -c 1
--n v2.1 -a elu -c 1 -A
+-n v2.1 -a elu -c 1.00 -b 1.00 
+-n v2.1 -a elu -c 1.00 -b 1.00 -A
 -n v2.1 -a elu -c 1.2
+-n v2.1 -a elu -c 1.20 -b 1.00 
 -n v2.1 -a elu -c 1.2 -A
 -n v2.1 -a elu -c 1.4
+-n v2.1 -a elu -c 1.40 -b 1.00 
 -n v2.1 -a elu -c 1.4 -A
+-n v2.1 -a elu -c 1 -A
 -n v2.1 -a lrelu -c 0.8
 -n v2.1 -a lrelu -c 0.8 
+-n v2.1 -a lrelu -c 0.80 -b 1.00 
 -n v2.1 -a lrelu -c 1
--n v2.1 -a lrelu -c 1
+-n v2.1 -a lrelu -c 1.00 -b 1.00 
 -n v2.1 -a lrelu -c 1.2
 -n v2.1 -a lrelu -c 1.2 
+-n v2.1 -a lrelu -c 1.20 -b 1.00 
 -n v2.1 -a relu -c 1
+-n v2.1 -a relu -c 1.00 -b 1.00 
 -n v2.2 -a relu -c 1
+-n v2.2 -a relu -c 1.00 -b 1.00 
+-n v2.3 -a elu -c 0.20 -b 0.20 
+-n v2.3 -a elu -c 0.20 -b 0.40 
+-n v2.3 -a elu -c 0.20 -b 0.60 
+-n v2.3 -a elu -c 0.20 -b 0.80 
+-n v2.3 -a elu -c 0.20 -b 1.00 
+-n v2.3 -a elu -c 0.2 -b 0.2
+-n v2.3 -a elu -c 0.2 -b 0.4
+-n v2.3 -a elu -c 0.2 -b 0.6
+-n v2.3 -a elu -c 0.2 -b 0.8
+-n v2.3 -a elu -c 0.2 -b 1.0
+-n v2.3 -a elu -c 0.40 -b 0.20 
+-n v2.3 -a elu -c 0.40 -b 0.40 
+-n v2.3 -a elu -c 0.40 -b 0.60 
+-n v2.3 -a elu -c 0.40 -b 0.80 
+-n v2.3 -a elu -c 0.40 -b 1.00 
+-n v2.3 -a elu -c 0.4 -b 0.2
+-n v2.3 -a elu -c 0.4 -b 0.4
+-n v2.3 -a elu -c 0.4 -b 0.6
+-n v2.3 -a elu -c 0.4 -b 0.8
+-n v2.3 -a elu -c 0.4 -b 1.0
+-n v2.3 -a elu -c 0.60 -b 0.20 
+-n v2.3 -a elu -c 0.60 -b 0.40 
+-n v2.3 -a elu -c 0.60 -b 0.60 
+-n v2.3 -a elu -c 0.60 -b 0.80 
+-n v2.3 -a elu -c 0.60 -b 1.00 
+-n v2.3 -a elu -c 0.6 -b 0.2
+-n v2.3 -a elu -c 0.6 -b 0.4
+-n v2.3 -a elu -c 0.6 -b 0.6
+-n v2.3 -a elu -c 0.6 -b 0.8
+-n v2.3 -a elu -c 0.6 -b 1.0
+-n v2.3 -a elu -c 0.80 -b 0.20 
+-n v2.3 -a elu -c 0.80 -b 0.40 
+-n v2.3 -a elu -c 0.80 -b 0.60 
+-n v2.3 -a elu -c 0.80 -b 0.80 
+-n v2.3 -a elu -c 0.80 -b 1.00 
+-n v2.3 -a elu -c 0.8 -b 0.2
+-n v2.3 -a elu -c 0.8 -b 0.4
+-n v2.3 -a elu -c 0.8 -b 0.6
+-n v2.3 -a elu -c 0.8 -b 0.8
+-n v2.3 -a elu -c 0.8 -b 1.0
+-n v2.3 -a elu -c 1.00 -b 0.20 
+-n v2.3 -a elu -c 1.00 -b 0.40 
+-n v2.3 -a elu -c 1.00 -b 0.60 
+-n v2.3 -a elu -c 1.00 -b 0.80 
+-n v2.3 -a elu -c 1.00 -b 1.00 
+-n v2.3 -a elu -c 1.0 -b 0.2
+-n v2.3 -a elu -c 1.0 -b 0.4
+-n v2.3 -a elu -c 1.0 -b 0.6
+-n v2.3 -a elu -c 1.0 -b 0.8
+-n v2.3 -a elu -c 1.0 -b 1.0
+-n v2 -a elu -c 0.20 -b 1.00 
+-n v2 -a elu -c 0.20 -b 1.00 -A
+-n v2 -a elu -c 0.30 -b 1.00 
+-n v2 -a elu -c 0.30 -b 1.00 -A
+-n v2 -a elu -c 0.40 -b 1.00 
+-n v2 -a elu -c 0.40 -b 1.00 -A
+-n v2 -a elu -c 0.50 -b 1.00 
+-n v2 -a elu -c 0.50 -b 1.00 -A
+-n v2 -a elu -c 0.60 -b 1.00 
+-n v2 -a elu -c 0.60 -b 1.00 -A
+-n v2 -a elu -c 0.80 -b 1.00 
+-n v2 -a elu -c 0.80 -b 1.00 -A
+-n v2 -a elu -c 1
+-n v2 -a elu -c 1.00 -b 1.00 
+-n v2 -a elu -c 1.00 -b 1.00 -A
+-n v2 -a lrelu -c 1
+-n v2 -a lrelu -c 1.00 -b 1.00 
+-n v2 -a lrelu -c 1.00 -b 1.00 -A
+-n v2 -a relu -c 0.10 -b 1.00 
+-n v2 -a relu -c 1
+-n v2 -a relu -c 1.00 -b 1.00 
+-n v2 -a relu -c 1.00 -b 1.00 -A
+-n v3 -a relu -c 1.00 -b 1.00 
+-n v4 -a elu -c 0.20 -b 1.00 
+-n v4 -a elu -c 0.20 -b 1.00 -A
+-n v4 -a elu -c 0.30 -b 1.00 
+-n v4 -a elu -c 0.30 -b 1.00 -A
+-n v4 -a elu -c 0.40 -b 1.00 
+-n v4 -a elu -c 0.40 -b 1.00 -A
+-n v4 -a elu -c 0.50 -b 1.00 
+-n v4 -a elu -c 0.50 -b 1.00 -A
+-n v4 -a elu -c 0.60 -b 1.00 
+-n v4 -a elu -c 0.60 -b 1.00 -A
+-n v4 -a elu -c 0.80 -b 1.00 
+-n v4 -a elu -c 0.80 -b 1.00 -A
