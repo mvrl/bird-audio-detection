@@ -1,9 +1,13 @@
 import os
 import wave
+import util
 import dataset
 import network
+import shutil
 import numpy as np
 import tensorflow as tf
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 from scipy.ndimage.filters import gaussian_filter
@@ -12,7 +16,47 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 
 slim = tf.contrib.slim
 
-ckpt_location = '/u/eag-d1/scratch/jacobs/birddetection/checkpoints/v2.1_elu_0.20_1.00_no'
+data_base = '../data/'
+
+nc,dc = util.parse_arguments()
+run_name = util.run_name(nc,dc)
+
+checkpoint_dir = 'checkpoint/' + run_name + '/'
+
+def plot_images(plt_title, activations):
+    plt.close('all')
+    fig = plt.figure(1)
+    num_subplots = len(activations)
+    num_cols = 2
+    num_rows = np.ceil(num_subplots / num_cols)
+    keys = activations.keys()
+    keys.sort()
+    counter = 1
+    for key in keys:
+        activ_map = activations[key]
+        ax = plt.subplot(3, 2, counter)
+        ax.set_title('%s %s' % (key, activ_map.shape))
+
+        # If it's a 1D array
+        if activ_map.shape[0] == 1:
+            activ_map = activ_map.reshape((activ_map.shape[-1],))
+            plt.plot(range(activ_map.size), activ_map)
+            x1, x2, y1, y2 = 0, activ_map.size, -2.0, 2.0
+            plt.axis((x1, x2, y1, y2))
+        
+        # If it's a 2D array
+        else:
+            map_shape = (50, 100)
+            image = imresize(activations[key], map_shape)
+            image = gaussian_filter(image, 1)
+            plt.axis('off')
+            plt.imshow(image)
+
+        counter += 1
+
+    fig.suptitle(plt_title, size=16)
+    plt.tight_layout()
+    fig.subplots_adjust(top=0.88)
 
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
@@ -24,24 +68,21 @@ with tf.variable_scope('Predictor'):
     logits, end_points = network.network(feat,
                                          is_training=False,
                                          activation_fn=tf.nn.elu,
-                                         capacity=0.2,
-                                         capacity2=1.0)
+                                         network='v5')
 
     probs = tf.nn.softmax(logits)
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
-if not os.path.exists('./conv5'):
-    os.mkdir('./conv5')
-
-if not os.path.exists('./conv6'):
-    os.mkdir('./conv6')
-
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
+    save_dir = './visualizations/%s/' % run_name
+    if not os.path.exists(save_dir):
+        save_dir = os.mkdir(save_dir)
+
     sess.run(tf.local_variables_initializer())
     sess.run(tf.global_variables_initializer())
 
     saver = tf.train.Saver()
-    ckpt = tf.train.get_checkpoint_state(ckpt_location)
+    ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
@@ -49,52 +90,29 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
-    _feat, _label, _recname, _prediction, output = sess.run([feat,
-                                                             label, 
-                                                             recname, 
-                                                             prediction, 
-                                                             end_points])
-    for idx in range(20):
-        sample = output['conv6'][idx]
+    _feat, _label, _recname, _prediction, _end_points = sess.run([feat,
+                                                                  label, 
+                                                                  recname, 
+                                                                  prediction, 
+                                                                  end_points])
+    
+    for idx in range(len(_recname)):
+        activations = {}
+        plt_title = '%s,%d,%d' % (_recname[idx], _label[idx], _prediction[idx])
+        keys = _end_points.keys() 
+        keys.sort()
+        for key in keys:
+            activ_map = _end_points[key][idx]
+            activ_map = activ_map.reshape(-1, activ_map.shape[-1])
+            
+            if activ_map.shape[0] > activ_map.shape[1]:
+                activ_map = activ_map.T
+            
+            activations[key] = activ_map
 
-        plt.figure(1)
-        plt.subplot(311)
-        plt.plot(range(sample.shape[0]), sample[:,0,0])
-        plt.axis((0, sample.shape[0], -25.0, 25.0))
-
-        plt.title('%s %d %d' % (_recname[idx], _label[idx], _prediction[idx]))
-
-        plt.subplot(312)
-        plt.plot(range(sample.shape[0]), sample[:,0,1])
-        plt.axis((0, sample.shape[0], -25.0, 25.0))
-
-        plt.subplot(313)
-        plt.specgram(_feat[idx])
-
-        plt.savefig('./conv6/test_%d.png' % idx)
-        plt.clf()
-
-        sample = output['conv5'][idx]
-
-        sample = sample.reshape((sample.shape[0], 26)).T
-        sample = imresize(sample, (26,150))
-        sample = gaussian_filter(sample, 1)
-
-        # Sort sample by column 45
-        # sample = [ sample[idx] for idx in np.argsort(sample[:,45]) ]
-
-        # Sort sample by mean of each row
-        mean = [ np.mean(x) for x in sample ]
-        sample = [ sample[idx] for idx in np.argsort(mean) ]
-
-        plt.figure(1)
-        plt.subplot(211)
-        plt.imshow(sample)
+        plot_images(plt_title, activations)
         
-        plt.title('%s %d %d' % (_recname[idx], _label[idx], _prediction[idx]))
+        shutil.copy(data_base + _recname[idx] + '.wav', 
+                    '%s/%d.wav' % (save_dir, idx))
 
-        plt.subplot(212)
-        plt.specgram(_feat[idx])
-
-        plt.savefig('./conv5/test_%d.png' % idx)
-        plt.clf()
+        plt.savefig('%s/%d.png' % (save_dir, idx), bbox_inches='tight')
