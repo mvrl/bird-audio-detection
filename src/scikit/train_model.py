@@ -20,6 +20,7 @@ from sklearn.tree import DecisionTreeClassifier
 import random
 import sklearn.decomposition
 import os
+import glob
 
 features_dir="/u/eag-d1/scratch/jacobs/birddetection/"
 folds="/u/eag-d1/scratch/jacobs/birddetection/folds/"
@@ -119,18 +120,18 @@ def train_svm_rbf(train_data,train_labels):
 
 
 def main():
-		files_path=get_train_files() 
-		target_features="soundnet_pool5"
-		layer_name="layer18"
-		train_data,train_labels=load_data(files_path,target_features,layer_name)
+    files_path=get_train_files() 
+    target_features="soundnet_pool5"
+    layer_name="layer18"
+    train_data,train_labels=load_data(files_path,target_features,layer_name)
 
-		clf_linear=train_svm_linear(train_data,train_labels)
+    clf_linear=train_svm_linear(train_data,train_labels)
 
-		save_dir="./pool5/"
-		if not os.path.exists(save_dir):
-				os.makedirs(save_dir)
+    save_dir="./pool5/"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
 
-		joblib.dump(clf_linear, save_dir+"svm_linear/svm_linear_pool5_model.pkl") 
-		
+    joblib.dump(clf_linear, save_dir+"svm_linear/svm_linear_pool5_model.pkl") 
+
 
 main()
