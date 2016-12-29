@@ -50,8 +50,7 @@ the correct setting for `TF_BINARY_URL` from the tensorflow website, then run
 1. `./driver.sh` : this uses GNU parallel to train multiple models.  it is currently configured to work on a machine
 with two GPUs
 
-## Use features extracted from [soundNet](https://projects.csail.mit.edu/soundnet/) to train
-traditional ML approaches:
+## Use features extracted from [soundNet](https://projects.csail.mit.edu/soundnet/) to train traditional ML approaches:
 
 In this approach for Bird Audio Detection, we push the audio files
 through [soundNet](https://projects.csail.mit.edu/soundnet/) and
