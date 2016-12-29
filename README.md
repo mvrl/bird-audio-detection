@@ -50,12 +50,14 @@ the correct setting for `TF_BINARY_URL` from the tensorflow website, then run
 1. `./driver.sh` : this uses GNU parallel to train multiple models.  it is currently configured to work on a machine
 with two GPUs
 
-## Train basic ML approaches on extracted [soundNet](https://projects.csail.mit.edu/soundnet/) features:
+## Use features extracted from [soundNet](https://projects.csail.mit.edu/soundnet/) to train
+traditional ML approaches:
 
 In this approach for Bird Audio Detection, we push the audio files
 through [soundNet](https://projects.csail.mit.edu/soundnet/) and
 extract the features at different layers. Then train different basic ML
-approaches using scikit-learn package. The code to train linear_SVM in `./src/scikit
+approaches using scikit-learn package. The code to train linear_SVM in
+`./src/scikit`
      
 
     
