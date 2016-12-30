@@ -91,8 +91,6 @@ def _augment(tensors, neg_tensors, batch_size=16):
     # It is a positively skewed data series between 0.25 to 1
     r = 1 - 0.75 * tf.log(1. + 100*r) / tf.log(101.)
 
-    import ipdb; ipdb.set_trace()
-
     feat = r*feat + (1-r)*neg_feat
 
     # Shouldn't need to update label, as augmentation is an "|" operation
