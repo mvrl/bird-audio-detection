@@ -73,7 +73,7 @@ with tf.variable_scope('Input'):
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits, end_points = network.network(feat, is_training=False, **nc)
+    logits = network.network(feat, is_training=False, **nc)
 
     probs = tf.nn.softmax(logits)
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
@@ -95,11 +95,16 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
 
+    # Get all network end_points
+    end_points = tf.get_collection(tf.GraphKeys.ACTIVATIONS, scope='Predictor')
+
     _feat, _label, _recname, _prediction, _end_points = sess.run([feat,
                                                                   label, 
                                                                   recname, 
                                                                   prediction, 
                                                                   end_points])
+
+    import ipdb; ipdb.set_trace()
 
     # Plot filters of conv1
     print('Plotting conv1 filters')

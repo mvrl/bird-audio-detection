@@ -65,25 +65,20 @@ def network_v5(net, is_training=True, activation_fn=tf.nn.relu,
 
     net = tf.reshape(net,(-1,100000,4,1))
 
-    end_points = {}
-
     with slim.arg_scope(network_arg_scope(is_training=is_training,
         activation_fn=activation_fn)):
 
         # extract window features
         net = slim.conv2d(net,np.rint(capacity*32),[3,4],stride=(2,1))
-        end_points['conv1'] = net
         net = slim.conv2d(net,np.rint(capacity*32),[9,1],stride=(5,1))
         net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(5,1))
         net = slim.dropout(net)
         net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
-        end_points['conv3'] = net
         net = slim.dropout(net)
         net_early = tf.reduce_mean(net,[1],keep_dims=True)
         net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
         net = slim.dropout(net)
         net = slim.conv2d(net,np.rint(capacity*256),[9,1],stride=(5,1))
-        end_points['conv5'] = net
         net = slim.dropout(net)
         net_late = tf.reduce_mean(net,[1],keep_dims=True)
         net = slim.conv2d(net,np.rint(capacity*256),[3,1],stride=(2,1))
@@ -96,10 +91,8 @@ def network_v5(net, is_training=True, activation_fn=tf.nn.relu,
         net = tf.concat(3,(net,net_late,net_early))
         print(net)
         net = slim.conv2d(net,512,[1,1], stride=(1,1))
-        end_points['conv8'] = net
         net = slim.dropout(net)
         net = slim.conv2d(net,512,[1,1], stride=(1,1))
-        end_points['conv9'] = net
         net = slim.dropout(net)
         net = slim.conv2d(net,2,[1,1], stride=(1,1),
                 normalizer_fn=None,activation_fn=None)
@@ -110,8 +103,7 @@ def network_v5(net, is_training=True, activation_fn=tf.nn.relu,
 
         net = tf.squeeze(net)
 
-        return net, end_points 
-
+        return net
 def network_v4(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
     Nb = net.get_shape()[0]
@@ -273,8 +265,6 @@ def network_v2_1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
     net = tf.expand_dims(net,-1)
     # add a log
     net = tf.concat(3,(net,tf.log(net+1+1e-6)))
-    
-    end_points = {}
 
     with slim.arg_scope(network_arg_scope(is_training=is_training,
         activation_fn=activation_fn)):
@@ -288,15 +278,13 @@ def network_v2_1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         # combine window features
         net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(1,1))
         net = slim.conv2d(net,np.rint(capacity*128),[5,1],stride=(1,1))
-        end_points['conv5'] = net
         net = slim.conv2d(net,2,[8,1],normalizer_fn=None,activation_fn=None)
-        end_points['conv6'] = net
 
         net = slim.flatten(tf.reduce_max(net,[1]))
 
         net = tf.squeeze(net)
 
-        return net, end_points
+        return net
 
 def network_v2(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
