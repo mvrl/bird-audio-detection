@@ -13,6 +13,8 @@ datasets_challenge = ['badchallenge' ]
 random_state = 0
 num_folds = 10
 
+negative_samples = []
+
 def split_dataset(dataset_name, balance=False, shuffle=True):
 
     print('Spliting %s.' % dataset_name)
@@ -44,6 +46,8 @@ def split_dataset(dataset_name, balance=False, shuffle=True):
         fold_filename = dataset_name + '_%02d.csv' % counter
         print('Exporting %s' % fold_filename)
 
+        negative_samples.extend(samples['0'])
+
         if balance:
             print('Balancing each fold')
             n_pos = len(samples['1'])
@@ -71,3 +75,9 @@ for dataset_name in datasets_train:
 for dataset_name in datasets_challenge:
     split_dataset(dataset_name, balance=False, shuffle=False)
 
+# Shuffle and save all negative samples to a file
+random.shuffle(negative_samples)
+print('Writing negative samples')
+with open('./negative_samples.csv', 'w') as fb:
+    for sample in negative_samples:
+        fb.write('%s,%s\n' % sample)

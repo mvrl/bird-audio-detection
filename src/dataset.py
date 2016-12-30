@@ -64,18 +64,15 @@ def _get_names(dataset_name, what_to_grab='train'):
         names = glob.glob('./dataset/%s*0[0-9].csv' % dataset_name)
 
     else:
-        raise Exception("Don't know what to grab, it has to be train, \
-                         test or all.")
+        raise Exception("Don't know what to grab, it has to be train, test or all.")
 
     if not names:
-        raise Exception('No fold files found.  You probably need to run \
-                         ./dataset/make_dataset.py')
+        raise Exception('No fold files found.  You probably need to run ./dataset/make_dataset.py')
 
     return names
 
-def _augment(tensors,batch_size=16):
+def _augment(tensors, neg_tensors, batch_size=16):
 
-    raise(Exception('augmentation is not working right now.'))
     # SUGGESTION: we used to have code to isolate positives and
     # negatives then we would use the code below to merge only
     # positives and negatives.  probably a better strategy is to just
@@ -85,23 +82,20 @@ def _augment(tensors,batch_size=16):
     # same audio files, two different shuffles, add together to form
     # new audio files
 
-    feat1, label1, recname1 = tf.train.shuffle_batch_join(
-            tensors, batch_size=batch_size,
-            capacity=1000, min_after_dequeue=400)
-
-    feat2, label2, recname2 = tf.train.shuffle_batch_join(
-            tensors, batch_size=batch_size,
-            capacity=1000, min_after_dequeue=400)
+    feat, label, recname = tensors
+    neg_feat, neg_label, neg_recname = neg_tensors
 
     r = tf.random_uniform((batch_size,1))
 
-    feat = r*feat1 + (1-r)*feat2
+    # r represents the percentage of signal we want to keep
+    # It is a positively skewed data series between 0.25 to 1
+    r = 1 - 0.75 * tf.log(1. + 100*r) / tf.log(101.)
 
-    # update the label, should not be needed because both labels
-    # should be the same
-    label = tf.minimum(1,label1 + label2) # element-wise or
+    feat = r*feat + (1-r)*neg_feat
 
-    recname = recname1 + '|' + recname2
+    # Shouldn't need to update label, as augmentation is an "|" operation
+
+    recname = recname + '|' + neg_recname
 
     return feat, label, recname
 
@@ -116,8 +110,6 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
     tensors_list = []
     for f in names:
         tensors = _load_tensors(f,num_epochs=num_epochs)
-        if augment_add:
-            tensors = _augment(tensors)
         tensors_list.append(tensors)
 
     if is_training:
@@ -131,6 +123,15 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
         tensors = tf.train.batch_join(tensors_list, 
                                     batch_size=batch_size,
                                     allow_smaller_final_batch=True)
+
+    if augment_add:
+
+        if not os.path.exists('./dataset/negative_samples.csv'):
+            raise Exception("Negative samples not found, run 'cd dataset' and 'python make_dataset.py' first, then train")
+
+        _neg_tensors = _load_tensors('./dataset/negative_samples.csv')
+        neg_tensors = tf.train.batch(_neg_tensors, batch_size=batch_size)
+        tensors = _augment(tensors, neg_tensors, batch_size=batch_size)
 
     return tensors 
 
