@@ -17,7 +17,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
 flags.DEFINE_string('summary_dir', 'logs/' + run_name, 'output directory for training summaries')
 flags.DEFINE_float('gamma',0.5,'learning rate change per step')
-flags.DEFINE_float('learning_rate',0.03,'learning rate change per step')
+flags.DEFINE_float('learning_rate',0.01,'learning rate change per step')
 
 dataset_names = ['freefield1010', 'warblr']
 
@@ -47,16 +47,16 @@ with tf.variable_scope('Predictor'):
 with tf.variable_scope('Loss'):
     print('Defining loss functions')
 
-    reg = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+    loss_reg = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits,
             label)
 
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
-    loss_class = 10*tf.reduce_mean(loss_class)
+    loss_class = tf.reduce_mean(loss_class)
 
-    loss = loss_class + reg 
+    loss = loss_class + loss_reg 
 
 with tf.variable_scope('Train'):
     print('Defining training methods')
@@ -72,7 +72,7 @@ with tf.variable_scope('Summaries'):
     print('Defining summaries')
 
     tf.summary.scalar('loss_class', loss_class)
-    tf.summary.scalar('loss_reg', reg)
+    tf.summary.scalar('loss_reg', loss_reg)
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('learning_rate', learning_rate)
     tf.summary.scalar('accuracy', acc)
@@ -106,16 +106,19 @@ with tf.Session(config=config) as sess:
     print('Starting training')
     while _i < 300000:
 
-        _,_,_i,_loss,_acc,_summary = sess.run([
+        _,_,_i,_loss,_loss_reg,_loss_class,_acc,_summary = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
+            loss_reg,
+            loss_class,
             acc,
             summary
             ])
 
-        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
+        print(str(_i) +' : lc ' + str(_loss_class) +' : lr ' +
+                str(_loss_reg) + ' : l ' + str(_loss) + ' : a ' + str(_acc))
 
         summary_writer.add_summary(_summary, _i)
         summary_writer.flush()

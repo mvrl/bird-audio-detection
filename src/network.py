@@ -61,6 +61,56 @@ def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, capac
         activation_fn=activation_fn, 
         capacity=capacity)
 
+def network_v6_2(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        net = tf.reshape(net,(-1,100000,4,1))
+        net = tf.concat(3,(slim.batch_norm(net),slim.batch_norm(tf.square(net))))
+
+        net = slim.conv2d(net,np.rint(capacity*32),[3,4],stride=(2,1))
+
+        net = slim.conv2d(net,np.rint(capacity*32),[9,1],stride=(5,1))
+        net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(5,1))
+        net_early = net;
+
+        net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(5,1))
+        net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
+        net_mid = net;
+
+        net = slim.conv2d(net,np.rint(capacity*256),[9,1],stride=(5,1))
+        net = slim.conv2d(net,np.rint(capacity*512),[3,1],stride=(2,1))
+        net_late = net;
+
+        print(net)
+
+        # shortcut connections
+        net = tf.concat(3,
+                (
+                    tf.reduce_mean(net_early,[1],keep_dims=True),
+                    tf.reduce_mean(net_mid,[1],keep_dims=True),
+                    tf.reduce_mean(net_late,[1],keep_dims=True),
+                    tf.reduce_max(net_late,[1],keep_dims=True)
+                    )
+                )
+
+        net = slim.conv2d(net,512,[1,1], stride=(1,1))
+        net = slim.conv2d(net,512,[1,1], stride=(1,1))
+
+        net = slim.conv2d(net,2,[1,1], stride=(1,1),
+                normalizer_fn=None,activation_fn=None)
+
+        print(net)
+
+        net = slim.flatten(net,[1])
+
+        net = tf.squeeze(net)
+
+        return net 
+
 def network_v6_1(net, is_training=True, activation_fn=tf.nn.relu,
         capacity=1.0, capacity2=1.0):
 
@@ -418,6 +468,7 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         return net 
 
 networks = {
+        'v6.2':network_v6_2,
         'v6.1':network_v6_1,
         'v6':network_v6, # v5 -> adds local normalization, drops skips, reduces capacity
         'v5':network_v5, 
