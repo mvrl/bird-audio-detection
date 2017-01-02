@@ -17,7 +17,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('checkpoint_dir', 'checkpoint/' + run_name + '/','output directory for model checkpoints')
 flags.DEFINE_string('summary_dir', 'logs/' + run_name, 'output directory for training summaries')
 flags.DEFINE_float('gamma',0.5,'learning rate change per step')
-flags.DEFINE_float('learning_rate',0.01,'learning rate change per step')
+flags.DEFINE_float('learning_rate',0.03,'learning rate change per step')
 
 dataset_names = ['freefield1010', 'warblr']
 
@@ -54,7 +54,7 @@ with tf.variable_scope('Loss'):
 
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
-    loss_class = tf.reduce_mean(loss_class)
+    loss_class = 10*tf.reduce_mean(loss_class)
 
     loss = loss_class + loss_reg 
 
@@ -106,7 +106,10 @@ with tf.Session(config=config) as sess:
     print('Starting training')
     while _i < 300000:
 
-        _,_,_i,_loss,_loss_reg,_loss_class,_acc,_summary = sess.run([
+        _,_,_i, \
+        _loss,_loss_reg,_loss_class,_acc, \
+        _summary \
+        = sess.run([
             train_op,
             update_ops,
             global_step,
