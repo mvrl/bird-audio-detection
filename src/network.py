@@ -4,6 +4,7 @@ import tensorflow as tf
 import ops
 slim = tf.contrib.slim
 import numpy as np
+from tensorflow.contrib.slim.nets import resnet_v2
 
 def network_arg_scope(
         weight_decay=0.0004,
@@ -60,6 +61,25 @@ def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, capac
         is_training=is_training, 
         activation_fn=activation_fn, 
         capacity=capacity)
+
+def network_v7(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    with slim.arg_scope(resnet_v2.resnet_arg_scope(is_training)):
+
+        net = tf.reshape(net,(-1,100000,4,1))
+        net = slim.conv2d(net,32,[3,4],stride=(2,1),padding="VALID")
+        net = slim.conv2d(net,64,[9,1],stride=(4,1))
+        net = slim.conv2d(net,128,[9,1],stride=(4,1))
+        net = slim.conv2d(net,128,[9,1],stride=(4,1))
+        net = slim.conv2d(net,227,[9,1],stride=(4,1))
+
+        net = tf.expand_dims(tf.squeeze(net),-1)
+        print(net)
+        net, endpoints = resnet_v2.resnet_v2_50(net, 2)
+        print(net)
+
+        return slim.flatten(net)
 
 def network_v6_2(net, is_training=True, activation_fn=tf.nn.relu,
         capacity=1.0, capacity2=1.0):
@@ -456,6 +476,7 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         return net 
 
 networks = {
+        'v7':network_v7, # residual network
         'v6.2':network_v6_2,
         'v6.1':network_v6_1,
         'v6':network_v6, # v5 -> adds local normalization, drops skips, reduces capacity
