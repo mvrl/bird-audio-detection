@@ -41,7 +41,7 @@ with tf.variable_scope('Input'):
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
 
-    logits = network.network(feat,
+    logits, aux_logits = network.network(feat,
             is_training=True,**nc)
 
 with tf.variable_scope('Loss'):
@@ -51,10 +51,13 @@ with tf.variable_scope('Loss'):
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits,
             label)
+    loss_aux = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            aux_logits,
+            label,name="loss_aux")
 
     prediction = tf.cast(tf.argmax(logits,1),dtype=tf.int32)
 
-    loss_class = 10*tf.reduce_mean(loss_class)
+    loss_class = 10*tf.reduce_mean(loss_class) + tf.reduce_mean(loss_aux)
 
     loss = loss_class + loss_reg 
 
