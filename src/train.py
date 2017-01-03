@@ -36,7 +36,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records_train_all(**dc)
+    feat, label, recname = dataset.records_train_all(batch_size=128,**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -62,7 +62,7 @@ with tf.variable_scope('Train'):
     print('Defining training methods')
 
     global_step = tf.Variable(0,name='global_step',trainable=False)
-    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,40000,FLAGS.gamma,staircase=True)
+    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,750,FLAGS.gamma,staircase=True)
     optimizer = tf.train.AdamOptimizer(learning_rate,epsilon=.1)
     train_op = optimizer.minimize(loss,global_step=global_step)
 
@@ -106,7 +106,7 @@ with tf.Session(config=config) as sess:
     _i = sess.run(global_step)
 
     print('Starting training')
-    while _i < 300000:
+    while _i < 10000:
 
         _,_,_i, \
         _loss,_loss_reg,_loss_class,_acc, \
