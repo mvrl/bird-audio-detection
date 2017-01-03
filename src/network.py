@@ -15,7 +15,7 @@ def network_arg_scope(
 
     batch_norm_params = {
         # Decay for the moving averages.
-        'decay': 0.9,
+        'decay': 0.999,
         # epsilon to prevent 0s in variance.
         'epsilon': 0.001,
         # collection containing update_ops.
@@ -110,10 +110,9 @@ def network_v8_1(net, is_training=True, activation_fn=tf.nn.relu,
 
         print(pyr_inv)
         
-        pyr_inv = tf.concat_v2(pyr_inv,3)
-        net = slim.batch_norm(pyr_inv)
+        pyr_inv_blob = tf.concat_v2(pyr_inv,3)
 
-        net = slim.conv2d(net,64,[9,1],stride=(5,1))
+        net = slim.conv2d(pyr_inv_blob,64,[9,1],stride=(5,1))
         net = slim.conv2d(net,128,[9,1],stride=(5,1))
         net = slim.conv2d(net,256,[3,1],stride=(2,1))
         net = slim.conv2d(net,512,[3,1],stride=(2,1))
@@ -122,7 +121,7 @@ def network_v8_1(net, is_training=True, activation_fn=tf.nn.relu,
 
         net = tf.concat_v2((
             tf.reduce_mean(net,[1],keep_dims=True),
-            tf.reduce_mean(pyr_inv,[1],keep_dims=True)),
+            tf.reduce_mean(pyr_inv_blob,[1],keep_dims=True)),
             3
             )
 
