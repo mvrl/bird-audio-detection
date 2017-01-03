@@ -13,7 +13,7 @@ def ensure_no_dupes():
 
     with tf.Session() as sess:
 
-        sess.run(tf.initialize_all_variables())
+        sess.run(tf.local_variables_initializer())
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
 
