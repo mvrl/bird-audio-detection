@@ -89,7 +89,7 @@ def _augment(tensors, neg_tensors, batch_size=16):
 
     # r represents the percentage of signal we want to keep
     # It is a positively skewed data series between 0.25 to 1
-    r = 1 - 0.5 * tf.log(1. + 100*r) / tf.log(101.)
+    r = 1 - 0.25 * tf.log(1. + 100*r) / tf.log(101.)
 
     feat = r*feat + (1-r)*neg_feat
 
