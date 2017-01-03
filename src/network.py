@@ -6,7 +6,7 @@ slim = tf.contrib.slim
 import numpy as np
 
 def network_arg_scope(
-        weight_decay=0.00004,
+        weight_decay=0.0004,
         is_training=True,
         batch_norm_var_collection='moving_vars',
         activation_fn=tf.nn.relu,
@@ -80,6 +80,7 @@ def network_v6_2(net, is_training=True, activation_fn=tf.nn.relu,
         net = slim.conv2d(net,np.rint(capacity*512),[9,1],stride=(5,1))
 
         net = slim.conv2d(net,512,[3,1], stride=(1,1))
+
         net = slim.conv2d(net,512,[3,1], stride=(1,1))
 
         print(net)
@@ -182,28 +183,28 @@ def network_v5(net, is_training=True, activation_fn=tf.nn.relu,
         net = slim.conv2d(net,np.rint(capacity*32),[3,4],stride=(2,1))
         net = slim.conv2d(net,np.rint(capacity*32),[9,1],stride=(5,1))
         net = slim.conv2d(net,np.rint(capacity*64),[9,1],stride=(5,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net_early = tf.reduce_mean(net,[1],keep_dims=True)
         net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net = slim.conv2d(net,np.rint(capacity*256),[9,1],stride=(5,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net_late = tf.reduce_mean(net,[1],keep_dims=True)
         net = slim.conv2d(net,np.rint(capacity*256),[3,1],stride=(2,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net = slim.conv2d(net,np.rint(capacity*512),[3,1],stride=(2,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         print(net)
         net = tf.reduce_mean(net,[1],keep_dims=True)
         print(net)
         net = tf.concat(3,(net,net_late,net_early))
         print(net)
         net = slim.conv2d(net,512,[1,1], stride=(1,1))
-        net = slim.dropout(net)
+        #net = slim.dropout(net)
         net = slim.conv2d(net,512,[1,1], stride=(1,1))
-        net = slim.dropout(net)
+        # net = slim.dropout(net)
         net = slim.conv2d(net,2,[1,1], stride=(1,1),
                 normalizer_fn=None,activation_fn=None)
 
