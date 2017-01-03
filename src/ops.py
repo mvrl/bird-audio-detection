@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 def lrelu(x,leak=.2):
-    return tf.maximum(x,leak*x)
+    return tf.maximum(x,leak*x,name="LReLU")
 
 # Adapted from https://github.com/tensorflow/tensorflow/issues/1246
 def temporal_norm(tensor, height):
