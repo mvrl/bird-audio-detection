@@ -9,8 +9,8 @@ import util
 slim = tf.contrib.slim
 
 print('Setting up run')
-nc, dc = util.parse_arguments()
-run_name = util.run_name(nc,dc)
+nc, dc, rc = util.parse_arguments()
+run_name = util.run_name(nc,dc,rc)
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
