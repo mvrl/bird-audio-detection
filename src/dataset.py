@@ -8,7 +8,7 @@ import os
 import glob
 import ops
 
-d = 400000 # number of audio samples for learning
+d = 200000 # number of audio samples for learning
 
 basedir = '../data/'
 
@@ -20,8 +20,10 @@ def read_and_decode(recname):
             raw = fid.readframes(fid.getnframes())
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
 
+            y = signal.decimate(y,2).astype(np.float32)
+
             # pad if necessary 
-            amount_short = 400000-y.size
+            amount_short = d - y.size
             if 0 < amount_short:
                 y = np.pad(y, 
                         (0,amount_short),

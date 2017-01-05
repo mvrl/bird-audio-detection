@@ -36,7 +36,7 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    num_epochs = 100
+    num_epochs = 30 
 
     feat, label, recname = dataset.records_challenge(num_epochs=num_epochs, **dc)
 
