@@ -14,6 +14,7 @@ def parse_arguments():
     parser.add_option("-c", "--capacity", dest="CAP", type="float", default=1.0)
     parser.add_option("-b", "--capacity2", dest="CAP2", type="float", default=1.0)
     parser.add_option("-A", action="store_true", dest="AUG", default=False)
+    parser.add_option("-m", "--message", action="store", type="string", dest="msg", default="")
 
     (opts, args) = parser.parse_args()
 
@@ -34,9 +35,13 @@ def parse_arguments():
     dc = {}
     dc['augment_add'] = opts.AUG 
 
-    return nc, dc
+    # specify run configuration
+    rc = {}
+    rc['message'] = opts.msg
 
-def run_name(nc,dc):
+    return nc, dc, rc
+
+def run_name(nc,dc,rc):
 
     # define run name
     run_name = nc['network']
@@ -46,6 +51,8 @@ def run_name(nc,dc):
     run_name += '_{:0.2f}'.format(nc['capacity2'])
 
     run_name += '_yes' if dc['augment_add'] else '_no'
+
+    run_name += '_' + rc['message'] if rc['message'] != '' else ''
 
     return run_name
 
