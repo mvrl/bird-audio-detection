@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
 import numpy as np
+from scipy import signal
 import wave
 import os
 import glob
@@ -20,7 +21,7 @@ def read_and_decode(recname):
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
 
             # pad if necessary 
-            amount_short = 441000-y.size
+            amount_short = 400000-y.size
             if 0 < amount_short:
                 y = np.pad(y, 
                         (0,amount_short),
