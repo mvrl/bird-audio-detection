@@ -94,15 +94,23 @@ with tf.Session(config=config) as sess:
     threads = tf.train.start_queue_runners(coord=coord)
     sess.run(tf.global_variables_initializer())
 
+    if False:
+        saver = tf.train.Saver()
+        ckpt = tf.train.get_checkpoint_state('checkpoint/v8.2_relu_1.00_1.00_yes/')
+        if ckpt and ckpt.model_checkpoint_path: 
+            print('Restoring checkpoint (the goofy way)')
+            saver.restore(sess, ckpt.model_checkpoint_path)
+            #sess.run(global_step.assign(0))
+        else:
+            raise Exception("What are you doing?")
+
     saver = tf.train.Saver()
     ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
-    #ckpt = tf.train.get_checkpoint_state('checkpoint/v5_relu_1.00_1.00_yes/')
 
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
 
-    #sess.run(global_step.assign(0))
     _i = sess.run(global_step)
 
     print('Starting training')

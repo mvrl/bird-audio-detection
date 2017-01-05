@@ -6,7 +6,7 @@ slim = tf.contrib.slim
 import numpy as np
 
 def network_arg_scope(
-        weight_decay=0.0004,
+        weight_decay=0.004,
         is_training=True,
         batch_norm_var_collection='moving_vars',
         activation_fn=tf.nn.relu,
