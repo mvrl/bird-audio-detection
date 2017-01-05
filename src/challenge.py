@@ -89,4 +89,5 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     with open(out_file,'w') as fid:
         print("itemid,hasbird",file=fid)
         for key in _recnames:
-            print("%s,%1.8f" % (key, _scores[key] / num_epochs),file=fid)
+            out_name = key.split('/')[2]
+            print("%s,%1.8f" % (out_name, _scores[key] / num_epochs),file=fid)
