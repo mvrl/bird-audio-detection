@@ -65,7 +65,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     print('Starting evaluation')
 
     _scores = collections.defaultdict(float)
-    _recnames = collections.defaultdict(int)
 
     try:
 
@@ -77,7 +76,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
             for idx, name in enumerate(_recname):
                 _scores[name] += _score[idx]
-                _recnames[name] += 1
 
     except tf.errors.OutOfRangeError:
         print('Queue empty, exiting now...')
@@ -88,6 +86,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     print('Exporting to %s.'%out_file)
     with open(out_file,'w') as fid:
         print("itemid,hasbird",file=fid)
-        for key in _recnames:
+        for key in sorted(_scores):
             out_name = key.split('/')[2]
             print("%s,%1.8f" % (out_name, _scores[key] / num_epochs),file=fid)
