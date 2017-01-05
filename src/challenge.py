@@ -12,6 +12,7 @@ import numpy as np
 import dataset
 import network
 import util
+import collections
 slim = tf.contrib.slim
 
 #
@@ -35,7 +36,9 @@ if os.path.isfile(out_file):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records_challenge(**dc)
+    num_epochs = 100
+
+    feat, label, recname = dataset.records_challenge(num_epochs=num_epochs, **dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -61,8 +64,7 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
     print('Starting evaluation')
 
-    _scores = []
-    _recnames = []
+    _scores = collections.defaultdict(float)
 
     try:
 
@@ -72,8 +74,8 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
             print('Processed batch of size %i with average score %f'%(_score.size,_score.mean()))
 
-            _scores.extend(_score)
-            _recnames.extend(a.split('/')[2] for a in _recname)
+            for idx, name in enumerate(_recname):
+                _scores[name] += _score[idx]
 
     except tf.errors.OutOfRangeError:
         print('Queue empty, exiting now...')
@@ -84,6 +86,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
     print('Exporting to %s.'%out_file)
     with open(out_file,'w') as fid:
         print("itemid,hasbird",file=fid)
-        for r,s in sorted(zip(_recnames,_scores)):
-            print("%s,%1.8f"%(r,s),file=fid)
-
+        for key in sorted(_scores):
+            out_name = key.split('/')[2]
+            print("%s,%1.8f" % (out_name, _scores[key] / num_epochs),file=fid)
