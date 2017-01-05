@@ -85,8 +85,6 @@ with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
         coord.request_stop()
         coord.join(threads)
 
-    import ipdb; ipdb.set_trace()
-
     print('Exporting to %s.'%out_file)
     with open(out_file,'w') as fid:
         print("itemid,hasbird",file=fid)
