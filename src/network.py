@@ -356,6 +356,43 @@ def network_v8(net, is_training=True, activation_fn=tf.nn.relu,
 
         return net
 
+def network_v6_2small(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        net = tf.reshape(net,(-1,200000,1,1))
+
+        net = slim.conv2d(net,np.rint(capacity*16),[5,1],stride=(5,1))
+
+        net = slim.conv2d(net,np.rint(capacity*32),[5,1],stride=(2,1))
+        net = slim.conv2d(net,np.rint(capacity*64),[5,1],stride=(2,1))
+
+        net = slim.conv2d(net,np.rint(capacity*128),[9,1],stride=(5,1))
+        net = slim.conv2d(net,np.rint(capacity*256),[9,1],stride=(5,1))
+        net = slim.conv2d(net,np.rint(capacity*512),[9,1],stride=(5,1))
+
+        net = slim.conv2d(net,512,[3,1], stride=(1,1))
+
+        net = slim.conv2d(net,512,[3,1], stride=(1,1))
+
+        print(net)
+
+        net = tf.reduce_mean(net,[1],keep_dims=True)
+
+        print(net)
+
+        net = slim.conv2d(net,2,[1,1], stride=(1,1),
+                normalizer_fn=None,activation_fn=None)
+
+        print(net)
+
+        net = slim.flatten(net,[1])
+        print(net)
+
+        return net
+
 def network_v6_2(net, is_training=True, activation_fn=tf.nn.relu,
         capacity=1.0, capacity2=1.0):
 
@@ -755,6 +792,7 @@ networks = {
         'v8.2':network_v8_2,
         'v8.1':network_v8_1,
         'v8':network_v8,
+        'v6.2small':network_v6_2small,
         'v6.2':network_v6_2,
         'v6.1':network_v6_1,
         'v6':network_v6, # v5 -> adds local normalization, drops skips, reduces capacity
