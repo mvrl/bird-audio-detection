@@ -28,7 +28,7 @@ def split_dataset(dataset_name, balance=False, shuffle=True):
             label = label.strip()
             if label == '':
                 label = '-1'
-            names.append(dataset_name + '_audio/wav/' + name)
+            names.append(dataset_name + '_audio/wav_22050/' + name)
             labels.append(label)
 
 
