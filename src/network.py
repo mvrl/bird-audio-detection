@@ -6,7 +6,7 @@ slim = tf.contrib.slim
 import numpy as np
 
 def network_arg_scope(
-        weight_decay=0.0004,
+        weight_decay=0.004,
         is_training=True,
         batch_norm_var_collection='moving_vars',
         activation_fn=tf.nn.relu,
@@ -56,10 +56,229 @@ def network_arg_scope(
 def network(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0, capacity2=1.0, network='v2.1'):
 
     print('Using network ' + network + '.')
-    return networks[network](net, 
+
+    output = networks[network](net, 
         is_training=is_training, 
         activation_fn=activation_fn, 
         capacity=capacity)
+
+    for v in tf.all_variables():
+        print(v.name, v.get_shape().as_list())
+
+    return output
+
+def network_v8_2(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        net_x4 = tf.reshape(net,(-1,100000,4,1))
+        net_x2 = tf.reshape(net,(-1,200000,2,1))
+
+        pyr = []
+        pyr.append(slim.avg_pool2d(net_x2,(1,2),stride=(1,2)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+
+        print(pyr)
+
+        filts = []
+
+        filts.append(slim.conv2d(net_x4,np.rint(capacity*9),[3,4],stride=(2,1)))
+        with tf.variable_scope('Extract') as s:
+            for py in pyr:
+                filts.append(slim.conv2d(py,np.rint(capacity*11),(9,1),stride=(5,1),reuse=True,scope=s))
+
+        print(filts)
+
+        energies = []
+        for filt in filts:
+            energies.append(tf.reduce_mean(tf.square(filt),axis=3,keep_dims=True))
+
+        print(energies)
+
+        filts_sup = [tf.concat_v2((
+            tf.div(a,
+                tf.reduce_mean(
+                    b,
+                    axis=(1,2),
+                    keep_dims=True) + 0.0001
+                ),
+            b
+            ),3) for a,b in zip(filts,energies)]
+        
+        print(filts_sup)
+
+        pyr_inv = []
+        for filt,x in zip(filts_sup,[40,32,16,8,4,2]):
+            pyr_inv.append(slim.avg_pool2d(filt,(x,1),stride=(x,1)))
+
+        print(pyr_inv)
+        
+        pyr_inv_blob = tf.concat_v2(pyr_inv,3)
+
+        net = slim.conv2d(pyr_inv_blob,64,[9,1],stride=(5,1))
+        net = slim.conv2d(net,128,[9,1],stride=(5,1))
+        net = slim.conv2d(net,256,[3,1],stride=(2,1))
+        net = slim.conv2d(net,512,[3,1],stride=(2,1))
+
+        print(net)
+
+        net = tf.concat_v2((
+            tf.reduce_mean(net,[1],keep_dims=True),
+            tf.reduce_mean(pyr_inv_blob,[1],keep_dims=True)),
+            3
+            )
+
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+
+        net = slim.conv2d(net,2,[1,1], stride=(1,1),
+                normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(net,[1])
+
+        print(net)
+
+        return net
+
+def network_v8_1(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        net_x4 = tf.reshape(net,(-1,100000,4,1))
+        net_x2 = tf.reshape(net,(-1,200000,2,1))
+
+        pyr = []
+        pyr.append(slim.avg_pool2d(net_x2,(1,2),stride=(1,2)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+
+        print(pyr)
+
+        filts = []
+
+        filts.append(slim.conv2d(net_x4,np.rint(capacity*9),[3,4],stride=(2,1)))
+        with tf.variable_scope('Extract') as s:
+            for py in pyr:
+                filts.append(slim.conv2d(py,np.rint(capacity*11),(9,1),stride=(5,1),reuse=True,scope=s))
+
+        print(filts)
+
+        energies = []
+        for filt in filts:
+            energies.append(tf.reduce_max(tf.abs(filt),axis=3,keep_dims=True))
+
+        print(energies)
+
+        filts_sup = [tf.concat_v2((a,b),3) for a,b in zip(filts,energies)]
+        
+        print(filts_sup)
+
+        pyr_inv = []
+        for filt,x in zip(filts_sup,[40,32,16,8,4,2]):
+            pyr_inv.append(slim.avg_pool2d(filt,(x,1),stride=(x,1)))
+
+        print(pyr_inv)
+        
+        pyr_inv_blob = tf.concat_v2(pyr_inv,3)
+
+        net = slim.conv2d(pyr_inv_blob,64,[9,1],stride=(5,1))
+        net = slim.conv2d(net,128,[9,1],stride=(5,1))
+        net = slim.conv2d(net,256,[3,1],stride=(2,1))
+        net = slim.conv2d(net,512,[3,1],stride=(2,1))
+
+        print(net)
+
+        net = tf.concat_v2((
+            tf.reduce_mean(net,[1],keep_dims=True),
+            tf.reduce_mean(pyr_inv_blob,[1],keep_dims=True)),
+            3
+            )
+
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+
+        net = slim.conv2d(net,2,[1,1], stride=(1,1),
+                normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(net,[1])
+
+        print(net)
+
+        return net
+
+def network_v8(net, is_training=True, activation_fn=tf.nn.relu,
+        capacity=1.0, capacity2=1.0):
+
+    with slim.arg_scope(network_arg_scope(is_training=is_training,
+        activation_fn=activation_fn)):
+
+        net_x4 = tf.reshape(net,(-1,100000,4,1))
+        net_x2 = tf.reshape(net,(-1,200000,2,1))
+
+        pyr = []
+        pyr.append(slim.avg_pool2d(net_x2,(1,2),stride=(1,2)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+        pyr.append(slim.avg_pool2d(pyr[-1],(2,1),stride=(2,1)))
+
+        print(pyr)
+
+        filts = []
+        filts.append(slim.conv2d(net_x4,np.rint(capacity*9),[3,4],stride=(2,1)))
+        for py in pyr:
+            filts.append(slim.conv2d(py,np.rint(capacity*9),(9,1),stride=(5,1)))
+
+        print(filts)
+
+        energies = []
+        for filt in filts:
+            energies.append(tf.reduce_max(tf.abs(filt),axis=3,keep_dims=True))
+
+        print(energies)
+
+        filts_sup = [tf.concat_v2((a,b),3) for a,b in zip(filts,energies)]
+        
+        print(filts_sup)
+
+        pyr_inv = []
+        for filt,x in zip(filts_sup,[40,32,16,8,4,2]):
+            pyr_inv.append(slim.avg_pool2d(filt,(x,1),stride=(x,1)))
+
+        print(pyr_inv)
+        
+        net = tf.concat_v2(pyr_inv,3)
+        net = slim.batch_norm(net)
+
+        net = slim.conv2d(net,64,[9,1],stride=(5,1))
+        net = slim.conv2d(net,128,[9,1],stride=(5,1))
+        net = slim.conv2d(net,256,[3,1],stride=(2,1))
+        net = slim.conv2d(net,512,[3,1],stride=(2,1))
+
+        print(net)
+
+        net = tf.reduce_max(net,[1],keep_dims=True)
+
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+        net = slim.conv2d(net,512,[1,1],stride=(1,1))
+
+        net = slim.conv2d(net,2,[1,1], stride=(1,1),
+                normalizer_fn=None,activation_fn=None)
+
+        net = slim.flatten(net,[1])
+
+        print(net)
+
+        return net
 
 def network_v6_2(net, is_training=True, activation_fn=tf.nn.relu,
         capacity=1.0, capacity2=1.0):
@@ -456,6 +675,9 @@ def network_v1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
         return net 
 
 networks = {
+        'v8.2':network_v8_2,
+        'v8.1':network_v8_1,
+        'v8':network_v8,
         'v6.2':network_v6_2,
         'v6.1':network_v6_1,
         'v6':network_v6, # v5 -> adds local normalization, drops skips, reduces capacity

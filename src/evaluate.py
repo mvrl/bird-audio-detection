@@ -20,8 +20,8 @@ slim = tf.contrib.slim
 # parse inputs 
 #
 
-nc,dc = util.parse_arguments()
-run_name = util.run_name(nc,dc)
+nc,dc,rc = util.parse_arguments()
+run_name = util.run_name(nc,dc,rc)
 
 checkpoint_dir = 'checkpoint/' + run_name + '/'
 out_file = checkpoint_dir + 'output.csv'

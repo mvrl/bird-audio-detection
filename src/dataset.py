@@ -146,14 +146,14 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
 
 # Load all of badchallenge files
 def records_challenge(dataset_names=['badchallenge'], 
-        is_training=False, batch_size=64, augment_add=False):
+        is_training=False, batch_size=64, augment_add=False, num_epochs=1):
 
     if augment_add:
         print('Ignoring augmentation in test mode')
 
     return _records(dataset_names=dataset_names,
                                 what_to_grab='all',
-                                num_epochs=1,
+                                num_epochs=num_epochs,
                                 augment_add=False,
                                 is_training=is_training,
                                 batch_size=batch_size)
@@ -191,4 +191,3 @@ def records_train_all(dataset_names=['freefield1010', 'warblr'],
                                 is_training=is_training,
                                 batch_size=batch_size,
                                 augment_add=augment_add)
-
