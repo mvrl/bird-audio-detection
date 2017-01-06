@@ -70,7 +70,7 @@ with tf.variable_scope('Summaries'):
 
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
-    sess.run(tf.initialize_local_variables())
+    sess.run(tf.local_variables_initializer())
 
     summary_writer = tf.summary.FileWriter(summary_dir, 
                                            sess.graph,

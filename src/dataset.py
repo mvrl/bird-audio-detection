@@ -2,6 +2,7 @@ from __future__ import division, print_function, absolute_import
 
 import tensorflow as tf
 import numpy as np
+from scipy import signal
 import wave
 import os
 import glob
@@ -20,7 +21,7 @@ def read_and_decode(recname):
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
 
             # pad if necessary 
-            amount_short = 441000-y.size
+            amount_short = 400000-y.size
             if 0 < amount_short:
                 y = np.pad(y, 
                         (0,amount_short),
@@ -89,7 +90,7 @@ def _augment(tensors, neg_tensors, batch_size=16):
 
     # r represents the percentage of signal we want to keep
     # It is a positively skewed data series between 0.25 to 1
-    r = 1 - 0.75 * tf.log(1. + 100*r) / tf.log(101.)
+    r = 1 - 0.25 * tf.log(1. + 100*r) / tf.log(101.)
 
     feat = r*feat + (1-r)*neg_feat
 
@@ -118,6 +119,13 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
                                     batch_size=batch_size,
                                     capacity=1000,
                                     min_after_dequeue=400)
+
+        # randomly perturb the magnitude to attempt to make it less
+        # sensitive to volume differences
+        tensors[0] = tf.mul(
+            tensors[0],
+            tf.random_uniform((batch_size,1),minval=.75,maxval=1.33))
+
     else:
         # no need to shuffle test data
         tensors = tf.train.batch_join(tensors_list, 

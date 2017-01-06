@@ -50,7 +50,7 @@ with tf.variable_scope('Predictor'):
 
 with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
-    sess.run(tf.initialize_local_variables())
+    sess.run(tf.local_variables_initializer())
     
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)

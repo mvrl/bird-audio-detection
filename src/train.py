@@ -36,7 +36,7 @@ if not tf.gfile.Exists(FLAGS.summary_dir):
 with tf.variable_scope('Input'):
     print('Defining input pipeline')
 
-    feat, label, recname = dataset.records_train_fold(**dc)
+    feat, label, recname = dataset.records_train_all(**dc)
 
 with tf.variable_scope('Predictor'):
     print('Defining prediction network')
@@ -47,7 +47,7 @@ with tf.variable_scope('Predictor'):
 with tf.variable_scope('Loss'):
     print('Defining loss functions')
 
-    reg = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+    loss_reg = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
     loss_class = tf.nn.sparse_softmax_cross_entropy_with_logits(
             logits,
             label)
@@ -56,13 +56,13 @@ with tf.variable_scope('Loss'):
 
     loss_class = 10*tf.reduce_mean(loss_class)
 
-    loss = loss_class + reg 
+    loss = loss_class + loss_reg 
 
 with tf.variable_scope('Train'):
     print('Defining training methods')
 
     global_step = tf.Variable(0,name='global_step',trainable=False)
-    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,4000,FLAGS.gamma,staircase=True)
+    learning_rate = tf.train.exponential_decay(FLAGS.learning_rate,global_step,40000,FLAGS.gamma,staircase=True)
     optimizer = tf.train.AdamOptimizer(learning_rate,epsilon=.1)
     train_op = optimizer.minimize(loss,global_step=global_step)
 
@@ -72,7 +72,7 @@ with tf.variable_scope('Summaries'):
     print('Defining summaries')
 
     tf.summary.scalar('loss_class', loss_class)
-    tf.summary.scalar('loss_reg', reg)
+    tf.summary.scalar('loss_reg', loss_reg)
     tf.summary.scalar('loss', loss)
     tf.summary.scalar('learning_rate', learning_rate)
     tf.summary.scalar('accuracy', acc)
@@ -95,27 +95,35 @@ with tf.Session(config=config) as sess:
     sess.run(tf.global_variables_initializer())
 
     saver = tf.train.Saver()
-
     ckpt = tf.train.get_checkpoint_state(FLAGS.checkpoint_dir)
+    #ckpt = tf.train.get_checkpoint_state('checkpoint/v5_relu_1.00_1.00_yes/')
+
     if ckpt and ckpt.model_checkpoint_path: 
         print('Restoring checkpoint')
         saver.restore(sess, ckpt.model_checkpoint_path)
 
+    #sess.run(global_step.assign(0))
     _i = sess.run(global_step)
 
     print('Starting training')
-    while _i < 30000:
+    while _i < 300000:
 
-        _,_,_i,_loss,_acc,_summary = sess.run([
+        _,_,_i, \
+        _loss,_loss_reg,_loss_class,_acc, \
+        _summary \
+        = sess.run([
             train_op,
             update_ops,
             global_step,
             loss,
+            loss_reg,
+            loss_class,
             acc,
             summary
             ])
 
-        print(str(_i) + ' : ' + str(_loss) + ' : ' + str(_acc))
+        print(str(_i) +' : lc ' + str(_loss_class) +' : lr ' +
+                str(_loss_reg) + ' : l ' + str(_loss) + ' : a ' + str(_acc))
 
         summary_writer.add_summary(_summary, _i)
         summary_writer.flush()
