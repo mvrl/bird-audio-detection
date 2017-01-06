@@ -121,6 +121,13 @@ def _records(dataset_names=[''], what_to_grab='train', is_training=True,
                                     batch_size=batch_size,
                                     capacity=1000,
                                     min_after_dequeue=400)
+
+        # randomly perturb the magnitude to attempt to make it less
+        # sensitive to volume differences
+        tensors[0] = tf.mul(
+            tensors[0],
+            tf.random_uniform((batch_size,1),minval=.75,maxval=1.33))
+
     else:
         # no need to shuffle test data
         tensors = tf.train.batch_join(tensors_list, 
