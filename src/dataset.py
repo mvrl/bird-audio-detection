@@ -20,7 +20,8 @@ def read_and_decode(recname):
             raw = fid.readframes(fid.getnframes())
             y = np.fromstring(raw,dtype=np.int16).astype(np.float32)
 
-            y = signal.decimate(y,2).astype(np.float32)
+            # this is now handled as a pre-processing step
+            # y = signal.decimate(y,2).astype(np.float32)
 
             # pad if necessary 
             amount_short = d - y.size
