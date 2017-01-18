@@ -7,7 +7,6 @@ challenge](https://arxiv.org/abs/1608.03417).
 
 # Important Links
 
-- Slack channel: [#bird-audio](https://ukyvision.slack.com/messages/bird-audio/details/) [signup](https://ukyvision.slack.com/signup) (automatic with g.uky.edu or uky.edu address)
 - [Bird Audio Detection Challenge](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
 
 # Getting Started
@@ -57,9 +56,6 @@ through [soundNet](https://projects.csail.mit.edu/soundnet/) and
 extract the features at different layers. Then train different basic ML
 approaches using scikit-learn package. The code to train linear_SVM in
 `./src/scikit`
-     
-
-    
 
 # Contributing
 
