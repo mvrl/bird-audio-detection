@@ -9,6 +9,11 @@ challenge](https://arxiv.org/abs/1608.03417).
 
 - [Bird Audio Detection Challenge](http://machine-listening.eecs.qmul.ac.uk/bird-audio-detection-challenge/)
 
+# Other Entries
+
+- [RSPB's entry](https://github.com/RSPB/BirdAudioDetectionChallenge2016)
+- [qiuqiangkong's entry](https://github.com/qiuqiangkong/bird_detection)
+
 # Getting Started
 
 This should be enough to get you training and evaluating code running:
