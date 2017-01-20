@@ -13,6 +13,7 @@ challenge](https://arxiv.org/abs/1608.03417).
 
 - [RSPB's entry](https://github.com/RSPB/BirdAudioDetectionChallenge2016)
 - [qiuqiangkong's entry](https://github.com/qiuqiangkong/bird_detection)
+- [topel's entry](https://github.com/topel/bird_audio_detection_challenge)
 
 # Getting Started
 
