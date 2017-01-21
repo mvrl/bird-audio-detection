@@ -546,8 +546,7 @@ def network_v5(net, is_training=True, activation_fn=tf.nn.relu,
 
         net = tf.squeeze(net)
 
-        return net 
-
+        return net
 def network_v4(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
     Nb = net.get_shape()[0]
@@ -728,7 +727,7 @@ def network_v2_1(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
         net = tf.squeeze(net)
 
-        return net 
+        return net
 
 def network_v2(net, is_training=True, activation_fn=tf.nn.relu, capacity=1.0):
 
